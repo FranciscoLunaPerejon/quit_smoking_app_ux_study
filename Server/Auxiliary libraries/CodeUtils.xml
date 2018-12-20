@@ -1,0 +1,77 @@
+<codeTemplateLibrary version="3.5.1">
+  <id>c7c71ab1-1149-4c16-acd7-8d431dae0a2e</id>
+  <name>CodeUtils</name>
+  <revision>3</revision>
+  <lastModified>
+    <time>1514138031853</time>
+    <timezone>Europe/Paris</timezone>
+  </lastModified>
+  <description></description>
+  <includeNewChannels>false</includeNewChannels>
+  <enabledChannelIds>
+    <string>9f98ae0f-5a61-43d4-8d82-7086e0c1d148</string>
+  </enabledChannelIds>
+  <disabledChannelIds>
+    <string>8e44daa0-2590-4b0a-9c08-194863cbc6ee</string>
+    <string>9d2c084d-bbd8-402c-a551-a2caa137b91e</string>
+    <string>278aafa7-fbd7-4053-a79f-f16078b7ef19</string>
+    <string>34ed1b50-f05a-4157-8bce-89efa46b3397</string>
+    <string>41e48daa-3fbb-4f26-b5ee-3a3793d9b2ba</string>
+    <string>e73dc40a-fc0f-460e-a9aa-aa1f830b16c1</string>
+    <string>c1bc5c3f-92f6-4d7f-9cc2-9886761bfae0</string>
+    <string>abd6b38a-c048-4c7e-a77f-d17ca13f024c</string>
+    <string>501fe75b-3421-4a86-9776-1971b3cf4b0b</string>
+    <string>4f212078-ec94-4006-b310-5253422f24d5</string>
+    <string>a51aafce-d8a7-4f41-a4e4-be73d285fd86</string>
+    <string>b7cfd2ba-f3cf-4b7d-a6cb-cbd2768893c2</string>
+    <string>fcee1912-fa5b-47fa-9da4-d6a2148c8e4c</string>
+    <string>6dcd6af9-7395-447e-b4d4-450752fe73a4</string>
+    <string>32c33267-b2b5-4dec-9f37-4e7ee3125dc6</string>
+    <string>792b1bc8-3942-4e57-a07c-3d4d5bdf2758</string>
+    <string>72b5a5ab-4725-4e7b-8f11-eebee8b07d38</string>
+    <string>d550e3d4-ef58-4338-aa64-d6797cc98b53</string>
+    <string>77ee46e5-03d8-4eb8-8dec-00d62d9477d0</string>
+    <string>4567857e-e670-4ed9-8f7e-8f49f66ab106</string>
+    <string>078681bf-9671-403e-b89b-daaee98a9a59</string>
+  </disabledChannelIds>
+  <codeTemplates>
+    <codeTemplate version="3.5.1">
+      <id>924c6b01-a3f9-4c07-a193-a78d9086133e</id>
+      <name>isAValidCode</name>
+      <revision>5</revision>
+      <lastModified>
+        <time>1510227457555</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <contextSet>
+        <delegate>
+          <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+          <contextType>DESTINATION_DISPATCHER</contextType>
+          <contextType>SOURCE_RECEIVER</contextType>
+          <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+          <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+        </delegate>
+      </contextSet>
+      <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+        <type>FUNCTION</type>
+        <code>
+function isAValidCode(code, prefix){
+	
+	var haveValidLength = code.length == 5;
+
+	var haveValidPrefix = code.length &gt; 1 &amp;&amp; 
+					code.substring(0,2) == prefix;
+
+	var haveThreeValidNumbers = 
+						parseInt(code.substring(2,3)) &lt; 3 &amp;&amp;
+                              parseInt(code.substring(2,3)) &gt; 0 &amp;&amp;
+						parseInt(code.substring(3,4)) &lt; 10 &amp;&amp;
+                            	parseInt(code.substring(4,5)) &lt; 10 &amp;&amp;
+                              parseInt(code.substring(2,5)) &lt;= 250;
+
+	return haveValidLength &amp;&amp; haveValidPrefix &amp;&amp; haveThreeValidNumbers;
+}</code>
+      </properties>
+    </codeTemplate>
+  </codeTemplates>
+</codeTemplateLibrary>

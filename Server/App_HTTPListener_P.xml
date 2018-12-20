@@ -1,0 +1,2406 @@
+<channel version="3.5.1">
+  <id>9f98ae0f-5a61-43d4-8d82-7086e0c1d148</id>
+  <nextMetaDataId>8</nextMetaDataId>
+  <name>App_HTTPListener_P</name>
+  <description></description>
+  <revision>74</revision>
+  <sourceConnector version="3.5.1">
+    <metaDataId>0</metaDataId>
+    <name>sourceConnector</name>
+    <properties class="com.mirth.connect.connectors.http.HttpReceiverProperties" version="3.5.1">
+      <pluginProperties>
+        <com.mirth.connect.plugins.httpauth.NoneHttpAuthProperties version="3.5.1">
+  <authType>NONE</authType>
+        </com.mirth.connect.plugins.httpauth.NoneHttpAuthProperties>
+      </pluginProperties>
+      <listenerConnectorProperties version="3.5.1">
+        <host>0.0.0.0</host>
+        <port>903</port>
+      </listenerConnectorProperties>
+      <sourceConnectorProperties version="3.5.1">
+        <responseVariable>Postprocessor</responseVariable>
+        <respondAfterProcessing>true</respondAfterProcessing>
+        <processBatch>false</processBatch>
+        <firstResponse>false</firstResponse>
+        <processingThreads>1</processingThreads>
+        <resourceIds class="linked-hash-map">
+          <entry>
+            <string>Default Resource</string>
+            <string>[Default Resource]</string>
+          </entry>
+        </resourceIds>
+        <queueBufferSize>1000</queueBufferSize>
+      </sourceConnectorProperties>
+      <xmlBody>true</xmlBody>
+      <parseMultipart>true</parseMultipart>
+      <includeMetadata>true</includeMetadata>
+      <binaryMimeTypes>application/.*(?&lt;!json|xml)$|image/.*|video/.*|audio/.*</binaryMimeTypes>
+      <binaryMimeTypesRegex>false</binaryMimeTypesRegex>
+      <responseContentType>text/plain</responseContentType>
+      <responseDataTypeBinary>false</responseDataTypeBinary>
+      <responseStatusCode>${responseStatusCode}</responseStatusCode>
+      <responseHeaders class="linked-hash-map"/>
+      <charset>UTF-8</charset>
+      <contextPath>/myrestservice</contextPath>
+      <timeout>0</timeout>
+      <staticResources/>
+    </properties>
+    <transformer version="3.5.1">
+      <elements/>
+      <inboundTemplate encoding="base64">Cjw/eG1sIHZlcnNpb249JzEuMCcgZW5jb2Rpbmc9J2xhdGluMScgc3RhbmRhbG9uZT0neWVzJz8+
+CjxSZWdpc3RyYXRpb25SZXF1ZXN0IGhvbGE9ImFqa3NsYSI+PEFwcElEPlNGQjwvQXBwSUQ+CjxS
+ZXNvdXJjZXM+PG5pY2s+Q2FuZGVsYTwvbmljaz48aGFzaFBhc3M+NGQxODYzMjFjMWE3ZjBmMzU0
+YjI5N2U4OTE0YWIyNDA8L2hhc2hQYXNzPgo8L1Jlc291cmNlcz48L1JlZ2lzdHJhdGlvblJlcXVl
+c3Q+Cg==</inboundTemplate>
+      <outboundTemplate encoding="base64"></outboundTemplate>
+      <inboundDataType>XML</inboundDataType>
+      <outboundDataType>XML</outboundDataType>
+      <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+        <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+          <stripNamespaces>false</stripNamespaces>
+        </serializationProperties>
+        <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+          <splitType>Element_Name</splitType>
+          <elementName></elementName>
+          <level>1</level>
+          <query></query>
+          <batchScript></batchScript>
+        </batchProperties>
+      </inboundProperties>
+      <outboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+        <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+          <stripNamespaces>false</stripNamespaces>
+        </serializationProperties>
+        <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+          <splitType>Element_Name</splitType>
+          <elementName></elementName>
+          <level>1</level>
+          <query></query>
+          <batchScript></batchScript>
+        </batchProperties>
+      </outboundProperties>
+    </transformer>
+    <filter version="3.5.1">
+      <elements>
+        <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+          <name>registrationRequest</name>
+          <sequenceNumber>0</sequenceNumber>
+          <script>// A variable to control the error status
+channelMap.put(&apos;hasError&apos;, &quot;0&quot;);
+// A javascript Object to store the error code and message
+channelMap.put(&apos;errorMessage&apos;, {errorCode: null, errorMessage: null});
+
+
+var xmlContentRaw = msg[&apos;Content&apos;].toString();
+var xmlContentWithReplaces = xmlContentRaw.replace(&apos;&amp;lt;&apos;, &apos;&lt;&apos;).replace(&apos;&amp;gt;&apos;, &apos;&gt;&apos;);
+if(xmlContentWithReplaces.indexOf(&quot;&lt;RegistrationRequest&gt;&quot;) !== -1){
+	var parsedXML = new XML(xmlContentWithReplaces);
+
+	try {
+		
+		var username = parsedXML[&apos;Resources&apos;][&apos;username&apos;].toString();
+		var language = parsedXML[&apos;Resources&apos;][&apos;language&apos;].toString();
+		
+		if (username != &quot;&quot; &amp;&amp; language !=&quot;&quot;){
+			
+			destinationSet.removeAllExcept(&quot;sendConfirmRegistrationLink&quot;);
+			//logger.info(&quot;Solicitud de registro afirmativo&quot;)
+			channelMap.put(&apos;username&apos;, username);
+			channelMap.put(&apos;language&apos;, language);
+			var terms_of_use_accepted = parsedXML[&apos;Resources&apos;][&apos;termsAccepted&apos;].toString();
+			terms_of_use_accepted = terms_of_use_accepted?terms_of_use_accepted:&quot;f&quot;;
+			channelMap.put(&apos;termsofuseaccepted&apos;, terms_of_use_accepted);
+			
+			return true;
+		}
+		
+		channelMap.put(&apos;errorMessage&apos;, {errorCode:&quot;400&quot;, errorMessage:&quot;Bad Registration&quot;});
+		channelMap.put(&apos;hasError&apos;, 1);
+
+	} catch(e) {
+		
+		channelMap.put(&apos;errorMessage&apos;, {errorCode:&quot;500&quot;, errorMessage:&quot;Registration Error&quot;});
+		channelMap.put(&apos;hasError&apos;, 1);
+	}
+
+}
+
+return false;</script>
+        </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+          <name>correctAuthentication</name>
+          <sequenceNumber>1</sequenceNumber>
+          <operator>OR</operator>
+          <script>var dataBaseConnection;
+
+try {
+	logger.info(&quot;Entra en filtro de authenticacion&quot;);
+	dataBaseConnection = DatabaseConnectionFactory.createDatabaseConnection(&apos;org.postgresql.Driver&apos;,&apos;jdbc:postgresql://localhost:5432/NameOfDatabaseEstablished&apos;,&apos;introducedatabaseusername&apos;,&apos;introducepasswordfordatabaseuser&apos;);
+	
+	var digestAuth = new java.lang.String(FileUtil.decode(msg[&apos;Header&apos;][&apos;Authorization&apos;].toString().substr(6))).split(&apos;:&apos;);
+
+	logger.info(&quot;user: &quot; + String(digestAuth[0]) + &quot; y password: &quot; + String(digestAuth[1]));
+	
+	var selectUsersQuery = &quot;SELECT * FROM useraccount WHERE username = ? AND userpassword= ? &quot;;
+
+	var users = dataBaseConnection.executeCachedQuery(selectUsersQuery, [String(digestAuth[0]),String(digestAuth[1])]);
+	channelMap.put(&apos;userLength&apos;, users.size());
+	logger.info(String(digestAuth[0]))
+	logger.info(String(digestAuth[1]))
+	if (users.size() &gt; 0){
+		users.next();
+		
+		// Disable not-authentication destinations
+		destinationSet.remove(&quot;newUserRegistration&quot;);
+		destinationSet.remove(&quot;sendChangePasswordLink&quot;);
+		destinationSet.remove(&quot;sendConfirmRegistrationLink&quot;);
+		
+		channelMap.remove(&apos;errorMessage&apos;);
+		channelMap.remove(&apos;hasError&apos;);
+		
+		channelMap.put(&apos;username&apos;,digestAuth[0]);
+		channelMap.put(&apos;msgContent&apos;, msg[&apos;Content&apos;].toString());
+		
+		var firebase_token = String(new java.lang.String(msg[&apos;Header&apos;][&apos;fcmToken&apos;]).split(&apos;=&apos;)[1]);
+		var time_zone = msg[&apos;Header&apos;][&apos;timeZone&apos;].toString();
+		var idUser = users.getInt(1);
+		logger.info(&quot;firebase token: &quot; + firebase_token);
+		logger.info(&apos;time zone: &apos; + time_zone);
+		channelMap.put(&apos;info&apos;, &apos;Solicitud de peticion con autenticacion afirmativo&apos;);
+		dataBaseConnection.executeUpdate(&quot;UPDATE useraccount SET fcm_token = ?, time_zone = ?::CHARACTER VARYING WHERE id = ? &quot;, [firebase_token, time_zone, idUser]);
+
+		//var currentLanguageRow = dataBaseConnection.executeCachedQuery(&quot;SELECT language_name FROM userpreferences INNER JOIN sfblanguage ON language_id = sfblanguage.id WHERE user_id = ?&quot;, [idUser]);
+		//currentLanguageRow.next();
+		//var currentLanguage = currentLanguageRow.getString(1);
+
+		
+			var language = msg[&apos;Header&apos;][&apos;language&apos;].toString();
+			var lang_server = &quot;en&quot;;
+			if(language){
+				var aux_lang = language.substring(0,2)
+				if(aux_lang == &quot;es&quot;){
+					lang_server = aux_lang;
+				}else if(aux_lang ==&quot;zh&quot; || aux_lang ==&quot;el&quot;){
+					lang_server = aux_lang;
+				}else if(aux_lang ==&quot;ar&quot;){
+					lang_server = aux_lang;
+				}
+			}
+			languageIdRow = dataBaseConnection.executeCachedQuery(&apos;SELECT id FROM sfblanguage WHERE bcp_47_code = ? &apos;, [lang_server]);
+			languageIdRow.next();
+			languageId = languageIdRow.getInt(1); 
+			dataBaseConnection.executeUpdate(&quot;UPDATE userpreferences SET language_id = ? WHERE user_id = ?&quot;, [languageId, idUser]);
+
+			var xmlContentRaw = msg[&apos;Content&apos;].toString();
+			var xmlContentWithReplaces = xmlContentRaw.replace(&apos;&amp;lt;&apos;, &apos;&lt;&apos;).replace(&apos;&amp;gt;&apos;, &apos;&gt;&apos;);
+			
+			logger.info(&quot;La peticion es: &quot; + xmlContentWithReplaces);
+			
+			if(xmlContentWithReplaces.indexOf(&quot;SentMessageReceived&quot;) == -1  
+				&amp;&amp; xmlContentWithReplaces.indexOf(&quot;AddMessageInteraction&quot;) == -1 
+				&amp;&amp; xmlContentWithReplaces.indexOf(&quot;AddAppInteraction&quot;) == -1 
+				&amp;&amp; xmlContentWithReplaces.indexOf(&quot;SetConfiguration&quot;) == -1 
+				&amp;&amp; xmlContentWithReplaces.indexOf(&quot;AddMiniGamesActivity&quot;) == -1 ){
+
+				logger.info(&quot;es una peticion valida&quot;);
+				const METADATA_CONTROL_GROUP_CODE = &quot;0&quot;;
+				const METADATA_INTERVENTION_GROUP_CODE = &quot;1&quot;;
+	
+				var serverToken = &quot;AAAACSYLo38:APA91bHGw_vWj1yWGBSJRZKaZisWHdMES0_STvyldgHn2ZgE-06CXgtfBNPEBm0DHN1QSdUR2ftOKQED_YS39UbpIn5IJQwg3EFdY0Pg4wDogSVEbZt3hzWhmqXz8ptXdAG2vZMeqoQu&quot;;
+	
+				var userInformationRow = dataBaseConnection.executeCachedQuery(&quot;SELECT fcm_token,clinical_group, gender,nickname, max_sent_any_message FROM useraccount,personaldata WHERE useraccount.id = personaldata.user_id AND useraccount.id = &quot; + idUser);
+				userInformationRow.next()
+				var tokenFCM = userInformationRow.getString(1);
+				var userGender = userInformationRow.getString(3);
+				var nickname = userInformationRow.getString(4);
+	
+				/*
+				var lostMessagesLastWeekQuery = &quot;SELECT sentmessage.id AS sentmessage_id, sentmessage.message_id AS sentmessage_message_id, &quot; 
+					+ &quot;sentmessage.user_id AS sentmessage_user_id, sentmessage.sent_date AS sentmessage_sent_date FROM sentmessage &quot; 
+					+ &quot;WHERE sentmessage.sent_date &gt;= CURRENT_TIMESTAMP - (interval &apos;1 day&apos;)*7 AND sentmessage.sent_date &lt; CURRENT_TIMESTAMP - (interval &apos;1s&apos;)* 600&quot;
+					+ &quot; AND received_date IS NULL AND (is_read IS NULL OR is_read = FALSE) AND vote IS NULL&quot; 
+					+ &quot; AND sentmessage.user_id = ?::INTEGER&quot;
+				var lostMessagesLastWeekRows = dataBaseConnection.executeCachedQuery(lostMessagesLastWeekQuery, [idUser]);
+
+				logger.info(&quot;Cantidad de mensajes perdidos esta semana: &quot; + lostMessagesLastWeekRows.size())
+				while(lostMessagesLastWeekRows.next()){
+					
+					var sentMessageId = lostMessagesLastWeekRows.getInt(1);
+					var messageId = lostMessagesLastWeekRows.getInt(2);
+					var sentMessageDate = lostMessagesLastWeekRows.getString(4);
+					var messageInformationRow = dataBaseConnection.executeCachedQuery(&quot;SELECT message_content, message_type FROM message WHERE id = &quot; + messageId);
+					messageInformationRow.next();
+					var messageText = String(messageInformationRow.getString(1)).valueOf();
+					var sentMessageType = String(messageInformationRow.getInt(2)).valueOf();
+					//logger.info(&quot;El texto seleccionado sin cambiar es: &quot; + messageText);
+			
+					//logger.info(messageText + &quot;, type:&quot; +  sentMessageType)
+					
+					var completeMessage;
+					var messageTag;
+					if(sentMessageType == 2){ // Casual question, that is, follow up question
+						logger.info(&quot;follow up case&quot;)
+						var typeTagResult = dataBaseConnection.executeCachedQuery(&quot;SELECT type_description FROM messagetype WHERE id = &quot;+ sentMessageType);
+						if(typeTagResult.next()){
+							messageTag= String(typeTagResult.getString(1)).valueOf();
+						}
+						completeMessage = messageText;
+				
+					}
+					else{ // A motivational message, for the moment (maybe in the future it is necessary consider the new type &quot;information messages&quot;
+	
+						var completeMessage = &quot;&quot;;
+						
+						// Message processing 
+	
+						// Select one message depending on gender
+						var messageWithGenderSelected = &quot;&quot;;
+				
+						if(messageText.indexOf(&quot;&lt;ggg&gt;&quot;) != -1){
+							var arrayTextDividedByGender = messageText.split(&quot;&lt;ggg&gt;&quot;);
+							if(userGender == &quot;f&quot;){
+								messageWithGenderSelected = arrayTextDividedByGender[1];
+							}else{
+								messageWithGenderSelected = arrayTextDividedByGender[0];
+							}
+						}else{
+							messageWithGenderSelected = messageText;
+						}
+						// Replace &lt;Name&gt; with the user name in personal data
+						var regExpName = /&lt;(.+?)&gt;/ig;
+						processedMessage = messageWithGenderSelected.replace(regExpName,String(nickname).valueOf());
+						// logger.info(&quot;El texto con el nombre del usuario puesto es: &quot; + processedMessage);
+						
+						//Adding metadata
+						
+						var messageMetadata = &quot;&quot;;
+			
+						var groupCodeMetadata = &quot;&quot;;
+						var clinicalGroup = userInformationRow.getString(2);
+						if(clinicalGroup == &quot;PATIENT1&quot; || clinicalGroup == &quot;PATIENT2&quot; || clinicalGroup == &quot;A&quot;){
+							groupCodeMetadata = &quot;//&quot; + METADATA_INTERVENTION_GROUP_CODE;
+						}else{
+							groupCodeMetadata = &quot;//&quot; + METADATA_CONTROL_GROUP_CODE;
+						}
+						
+						var messageRepeatedMetadata = &quot;&quot;;
+						
+						var userLanguageIdRow= dataBaseConnection.executeCachedQuery(&quot;SELECT language_id FROM userpreferences WHERE user_id = &quot; + idUser);
+						var userLanguageId;
+						if (userLanguageIdRow.next()){
+							
+							userLanguageId = userLanguageIdRow.getInt(1); 
+			
+							var maxSentAnyMessages = userInformationRow.getInt(5);
+							
+							var previousCorrectSendingsOfThisMessageToTheUserResult = dataBaseConnection.executeCachedQuery(&quot;SELECT COUNT(*) FROM sentmessage WHERE message_id = &quot;+ messageId+&quot; AND received_date IS NOT NULL AND user_id = &quot;+ idUser);
+							var previousCorrectSendingsOfThisMessageToTheUser;
+							
+							if(previousCorrectSendingsOfThisMessageToTheUserResult.next()){
+								previousCorrectSendingsOfThisMessageToTheUser= previousCorrectSendingsOfThisMessageToTheUserResult.getInt(1);
+								if(previousCorrectSendingsOfThisMessageToTheUser == 0 || maxSentAnyMessages &gt; 2 ){
+									//Do nothing, keep working
+								}else if (previousCorrectSendingsOfThisMessageToTheUser==1 &amp;&amp; maxSentAnyMessages &lt; 1){
+									var messageSentPreviouslyOnceRow= dataBaseConnection.executeCachedQuery(&quot;SELECT repeated_once FROM repeatedmessagetext WHERE language_id= ?&quot;, [userLanguageId]); 
+									var messageSentPreviouslyOnce = &quot;&quot;;
+									if(messageSentPreviouslyOnceRow.next()){
+										messageSentPreviouslyOnce = &quot;//&quot; + messageSentPreviouslyOnceRow.getString(1);
+									}
+									messageRepeatedMetadata = messageSentPreviouslyOnce;
+									dataBaseConnection.executeUpdate(&quot;UPDATE useraccount SET (max_sent_any_message) = (?) WHERE id =&quot; + idUser, [1])
+								}else if(previousCorrectSendingsOfThisMessageToTheUser==2 &amp;&amp; maxSentAnyMessages &lt; 2){
+									var messageSentPreviouslyTwiceRow= dataBaseConnection.executeCachedQuery(&quot;SELECT repeated_twice FROM repeatedmessagetext WHERE language_id= ?&quot;, [userLanguageId]); 
+									var messageSentPreviouslyTwice = &quot;&quot;;
+									if(messageSentPreviouslyTwiceRow.next()){
+										messageSentPreviouslyTwice = &quot;//&quot; + messageSentPreviouslyTwiceRow.getString(1);
+									}
+									messageRepeatedMetadata = messageSentPreviouslyTwice;
+									dataBaseConnection.executeUpdate(&quot;UPDATE useraccount SET (max_sent_any_message) = (?) WHERE id =&quot; + idUser, [2])
+								}else{
+									//Do nothing
+								}
+							}
+						}
+			
+						completeMessage = processedMessage + groupCodeMetadata + messageRepeatedMetadata;
+						logger.info(&quot;El mensaje perdido ya procesado es: &quot; + completeMessage);
+						messageTag = &quot;Motivational Message&quot;
+			
+					}
+
+								//messageTag = &quot;testMessage&quot;;
+					JSONmessage = &apos;{&quot;to&quot; : &quot;&apos; + tokenFCM + &apos;&quot;,&apos; 
+			    					+ &apos; &quot;data&quot; : {&apos;
+			    					+ &apos; &quot;messageTag&quot; : &quot;&apos;+ messageTag + &apos;&quot;,&apos; 
+			    					+ &apos; &quot;messageBody&quot; : &quot;&apos;+ completeMessage + &apos;&quot;,&apos;
+			    					+ &apos; &quot;messageId&quot; : &quot;&apos;+ sentMessageId + &apos;&quot;,&apos;
+			    					+ &apos;}&apos;
+			    					+ &apos;}&apos;;
+			
+			    		logger.info(JSONmessage);
+					
+					// Create url object
+					var url = new java.net.URL(&apos;https://fcm.googleapis.com/fcm/send&apos;);
+					// Open connection to url
+					var conn = url.openConnection();
+			
+					conn.setDoOutput(true);
+					conn.setDoInput(true);
+					conn.setRequestMethod(&quot;POST&quot;);
+					conn.setRequestProperty(&quot;Content-type&quot;, &quot;application/json&quot;);
+					conn.setRequestProperty(&quot;Authorization&quot;, &quot;key=&quot; + serverToken)
+			
+					// Send request
+					var outStream = conn.getOutputStream();
+					var outWriter = new java.io.OutputStreamWriter(outStream, &quot;UTF-8&quot;);
+					outWriter.write(JSONmessage);
+					outWriter.close();
+			
+					// Get response
+					var inputStream = conn.getInputStream();
+					var streamReader = new java.io.InputStreamReader(inputStream);
+					var respStream = new java.io.BufferedReader(streamReader);
+			
+					//create variable to hold return data
+					var buffer = new java.lang.StringBuffer();
+					var line = null;
+					while ((line = respStream.readLine()) != null) {
+					buffer.append(line + &apos;n&apos;);
+					}
+					respStream.close();
+			
+					// Store response in channelMap
+					var response = buffer.toString();
+					channelMap.put(&apos;response&apos;, response);
+					logger.info(response)
+					
+				}*/
+			}
+		return true;
+	}
+    
+    
+    channelMap.put(&apos;errorMessage&apos;, {errorCode:&quot;Z001&quot;, errorMessage:&quot;Bad Authentication&quot;});
+    channelMap.put(&apos;responseStatusCode&apos;, &apos;404&apos;);
+    channelMap.put(&apos;hasError&apos;, 1);
+    
+} catch(e) {
+    channelMap.put(&apos;errorMessage&apos;, {errorCode:&quot;Z002&quot;, errorMessage:&quot;Authentication Error&quot;});
+    channelMap.put(&apos;responseStatusCode&apos;, &apos;500&apos;);
+    channelMap.put(&apos;hasError&apos;, 1);
+    channelMap.put(&apos;errorInfo&apos;, e);
+}finally{
+	if(dataBaseConnection){
+		dataBaseConnection.close();
+	}
+}
+
+return false;</script>
+        </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+          <name>changePasswordRequest</name>
+          <sequenceNumber>2</sequenceNumber>
+          <operator>OR</operator>
+          <script>// A variable to control the error status
+channelMap.put(&apos;hasError&apos;, &quot;0&quot;);
+// A javascript Object to store the error code and message
+channelMap.put(&apos;errorMessage&apos;, {errorCode: null, errorMessage: null});
+
+var xmlContentRaw = msg[&apos;Content&apos;].toString();
+var xmlContentWithReplaces = xmlContentRaw.replace(&apos;&amp;lt;&apos;, &apos;&lt;&apos;).replace(&apos;&amp;gt;&apos;, &apos;&gt;&apos;);
+
+if(xmlContentWithReplaces.indexOf(&quot;&lt;GetLinkToChangePassword&gt;&quot;) !== -1){
+	var parsedXML = new XML(xmlContentWithReplaces);
+
+	try {
+		var username = parsedXML[&apos;Resources&apos;][&apos;username&apos;].toString();
+		var language = parsedXML[&apos;Resources&apos;][&apos;language&apos;].toString();
+		if (username != &quot;&quot; &amp;&amp; language !=&quot;&quot;){
+
+			dataBaseConnection = DatabaseConnectionFactory.createDatabaseConnection(&apos;org.postgresql.Driver&apos;,&apos;jdbc:postgresql://localhost:5432/NameOfDatabaseEstablished&apos;,&apos;introducedatabaseusername&apos;,&apos;introducepasswordfordatabaseuser&apos;);
+			var selectUsersQuery = &quot;SELECT * FROM useraccount WHERE username = ?&quot;;
+			var users = dataBaseConnection.executeCachedQuery(selectUsersQuery, [username]);
+
+			if(users.next()){
+				destinationSet.removeAllExcept(&quot;sendChangePasswordLink&quot;);
+				channelMap.put(&apos;email&apos;, username);
+				channelMap.put(&apos;userId&apos;, users.getString(1));
+				channelMap.put(&apos;language&apos;, language)
+				// logger.info(&quot;Solicitud de cambio de contraseña afirmativo&quot;)
+				return true;
+				
+			}else{
+				channelMap.put(&apos;errorMessage&apos;, {errorCode:&quot;404&quot;, errorMessage:&quot;User not found&quot;});
+				channelMap.put(&apos;hasError&apos;, 1);
+				return false;
+			}
+						
+			
+		}
+		//TODO modificar para que mande un codigo HTTP apropiado
+		channelMap.put(&apos;errorMessage&apos;, {errorCode:&quot;400&quot;, errorMessage:&quot;Username empty&quot;});
+		channelMap.put(&apos;hasError&apos;, 1);
+
+	} catch(e) {
+		//TODO modificar para que mande un codigo HTTP apropiado (alguno relacionado con el server supongo, del tipo 5xx)
+		channelMap.put(&apos;errorMessage&apos;, {errorCode:&quot;500&quot;, errorMessage:&quot;Server error&quot;});
+		channelMap.put(&apos;hasError&apos;, 1);
+		logger.info(e);
+	}
+
+}
+
+return false;</script>
+        </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+          <name>confirmRegistrationRequest</name>
+          <sequenceNumber>3</sequenceNumber>
+          <operator>OR</operator>
+          <script>// A variable to control the error status
+channelMap.put(&apos;hasError&apos;, &quot;0&quot;);
+// A javascript Object to store the error code and message
+channelMap.put(&apos;errorMessage&apos;, {errorCode: null, errorMessage: null});
+
+
+var xmlContentRaw = msg[&apos;Content&apos;].toString();
+var xmlContentWithReplaces = xmlContentRaw.replace(&apos;&amp;lt;&apos;, &apos;&lt;&apos;).replace(&apos;&amp;gt;&apos;, &apos;&gt;&apos;);
+if(xmlContentWithReplaces.indexOf(&quot;&lt;ConfirmRegistration&gt;&quot;) !== -1 
+	|| xmlContentWithReplaces.indexOf(&quot;&lt;VerifyUserRegistrationRequest&gt;&quot;) !== -1){
+	var parsedXML = new XML(xmlContentWithReplaces);
+	
+	try {
+		
+		var username = parsedXML[&apos;Resources&apos;][&apos;username&apos;].toString();
+		var token = parsedXML[&apos;Resources&apos;][&apos;token&apos;].toString();
+		
+		if (username != &quot;&quot; &amp;&amp; token != &quot;&quot; ){
+
+			destinationSet.removeAllExcept(&quot;newUserRegistration&quot;);
+			
+			channelMap.put(&apos;username&apos;, username);
+			channelMap.put(&apos;token&apos;, token);
+
+			var hash_pass = parsedXML[&apos;Resources&apos;][&apos;hashPass&apos;].toString();
+			hash_pass = hash_pass?hash_pass:&quot;NAN&quot;;
+			channelMap.put(&apos;hashpass&apos;, hash_pass);
+
+			var fcm_token = parsedXML[&apos;Resources&apos;][&apos;fcmToken&apos;].toString();
+			fcm_token = fcm_token?fcm_token:&quot;NAN&quot;;
+			channelMap.put(&apos;fcmtoken&apos;, fcm_token);
+			
+			var language = parsedXML[&apos;Resources&apos;][&apos;language&apos;].toString();
+			language = language?language:&quot;NAN&quot;;
+			channelMap.put(&apos;language&apos;,language);
+			
+			var time_zone = parsedXML[&apos;Resources&apos;][&apos;timeZone&apos;].toString();
+			time_zone = time_zone?time_zone:&quot;NAN&quot;;
+			channelMap.put(&apos;timezone&apos;,time_zone);
+			
+			return true;
+		}
+		
+		channelMap.put(&apos;errorMessage&apos;, {errorCode:&quot;400&quot;, errorMessage:&quot;Bad Registration&quot;});
+		channelMap.put(&apos;hasError&apos;, 1);
+
+	} catch(e) {
+		logger.info(e);
+		channelMap.put(&apos;errorMessage&apos;, {errorCode:&quot;500&quot;, errorMessage:&quot;Registration Error&quot;});
+		channelMap.put(&apos;hasError&apos;, 1);
+	}
+
+}
+
+return false;</script>
+        </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+      </elements>
+    </filter>
+    <transportName>HTTP Listener</transportName>
+    <mode>SOURCE</mode>
+    <enabled>true</enabled>
+    <waitForPrevious>true</waitForPrevious>
+  </sourceConnector>
+  <destinationConnectors>
+    <connector version="3.5.1">
+      <metaDataId>2</metaDataId>
+      <name>newUserRegistration</name>
+      <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>false</queueEnabled>
+          <sendFirst>false</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>0</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>1</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <script>var username = channelMap.get(&quot;username&quot;);
+var firebase_token = channelMap.get(&quot;fcmtoken&quot;);
+var language = channelMap.get(&quot;language&quot;);
+var time_zone = channelMap.get(&quot;timezone&quot;);
+var hash_pass = channelMap.get(&quot;hashpass&quot;);
+var dataBaseConnection;
+
+responseMap.put(&apos;response&apos;, &quot;&quot;);
+
+try{
+	dataBaseConnection = DatabaseConnectionFactory.createDatabaseConnection(&apos;org.postgresql.Driver&apos;,&apos;jdbc:postgresql://localhost:5432/NameOfDatabaseEstablished&apos;,&apos;introducedatabaseusername&apos;,&apos;introducepasswordfordatabaseuser&apos;);
+
+   
+	if(language == &quot;NAN&quot; || time_zone == &quot;NAN&quot; || hash_pass == &quot;NAN&quot;){
+		channelMap.put(&apos;responseStatusCode&apos;, &apos;201&apos;);
+		responseMap.put(&apos;response&apos;, &quot;verified&quot;);
+		return $r(&apos;response&apos;);
+	}else{
+		var lang_server = &quot;en&quot;;
+		if(language){
+			var aux_lang = language.substring(0,2)
+			if(aux_lang == &quot;es&quot;){
+				lang_server = aux_lang;
+			}else if(aux_lang ==&quot;zh&quot;){
+				lang_server = aux_lang;
+			}else if(aux_lang ==&quot;el&quot;){
+				lang_server = aux_lang;
+			}else if(aux_lang ==&quot;ar&quot;){
+				lang_server = aux_lang;
+			}
+		}
+	
+		var params = [username, hash_pass, lang_server, time_zone];
+	
+		// TODO change for the database stored procedure signupbasicuser when the intervention with patients begin
+		dataBaseConnection.executeUpdate(&quot;SELECT signupbasicuser(?, ?, ?, ?)&quot;, params); // void method, new user in database
+		
+		var idNewUser = dataBaseConnection.executeCachedQuery(&quot;SELECT id FROM useraccount WHERE username = ?&quot;, [username]);
+		var id;
+		if(idNewUser.size() &lt;1){
+			channelMap.put(&apos;responseStatusCode&apos;, &apos;500&apos;);
+		}else{
+			idNewUser.next();
+			id = idNewUser.getInt(1);
+			if(firebase_token!=&quot;NAN&quot;){
+				dataBaseConnection.executeUpdate(&quot;UPDATE useraccount SET fcm_token = ? WHERE id = ? &quot;, [firebase_token, id]);
+			}
+			channelMap.put(&apos;responseStatusCode&apos;, &apos;201&apos;);
+		}
+		setRequestConfirmedQuery = &quot;UPDATE signuprequest SET confirmed = true WHERE is_valid AND used_username = ?&quot;;
+		dataBaseConnection.executeUpdate(setRequestConfirmedQuery, [username]);
+		responseMap.put(&apos;response&apos;, &quot;&quot;);
+		return $r(&apos;response&apos;);
+	}
+
+}catch(e){
+	logger.info(e);
+	channelMap.put(&apos;responseStatusCode&apos;, &apos;500&apos;);
+	responseMap.put(&apos;response&apos;, &quot;&quot;);
+	channelMap.put(&apos;error&apos;, e);
+}
+finally{
+	if(dataBaseConnection){
+		dataBaseConnection.close();
+	}
+	channelMap.remove(&quot;username&quot;);
+	channelMap.remove(&quot;hashpass&quot;);
+}
+</script>
+      </properties>
+      <transformer version="3.5.1">
+        <elements/>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <outboundTemplate encoding="base64"></outboundTemplate>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>XML</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements/>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <outboundTemplate encoding="base64"></outboundTemplate>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>XML</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+            <name>userNoExists</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>var res = false;
+var dataBaseConnection;
+
+try {
+	dataBaseConnection = DatabaseConnectionFactory.createDatabaseConnection(&apos;org.postgresql.Driver&apos;,&apos;jdbc:postgresql://localhost:5432/NameOfDatabaseEstablished&apos;,&apos;introducedatabaseusername&apos;,&apos;introducepasswordfordatabaseuser&apos;);
+
+	var token;
+	
+	var username = channelMap.get(&apos;username&apos;);
+	var token = channelMap.get(&apos;token&apos;);
+
+	var selectPossibleValidRegistrationRequestQuery = &quot;SELECT * FROM signuprequest WHERE used_username = ? AND generated_token = ? AND is_valid AND NOT confirmed AND request_date &gt; CURRENT_TIMESTAMP - INTERVAL &apos;2 DAY&apos; &quot;;
+	var CheckIfUserAlreadyRegisteredQuery = &quot;SELECT * FROM useraccount WHERE username = ?&quot;;
+	
+	var selectPossibleValidRegistrationRequest = dataBaseConnection.executeCachedQuery(selectPossibleValidRegistrationRequestQuery, [username.toString(), token.toString()]);
+	var possibleAlreadyRegisteredUser = dataBaseConnection.executeCachedQuery(CheckIfUserAlreadyRegisteredQuery, [username.toString()]);
+
+	
+	existsARegistrationRequestForUser = selectPossibleValidRegistrationRequest.next();
+	userIsAlreadyRegistered = possibleAlreadyRegisteredUser.next();
+	
+	if(existsARegistrationRequestForUser){
+		
+		if(userIsAlreadyRegistered){
+			channelMap.put(&apos;responseStatusCode&apos;, &apos;405&apos;);
+		}else{
+			res = true
+		}
+		
+	}else{
+		channelMap.put(&apos;responseStatusCode&apos;, &apos;403&apos;);
+	}
+
+} finally {
+	if (dataBaseConnection) { 
+		dataBaseConnection.close();
+	}
+}
+
+return res;</script>
+          </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        </elements>
+      </filter>
+      <transportName>JavaScript Writer</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+    <connector version="3.5.1">
+      <metaDataId>1</metaDataId>
+      <name>modifyResource</name>
+      <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>false</queueEnabled>
+          <sendFirst>false</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>0</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>1</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <script>var xmlContentRaw = channelMap.get(&apos;msgContent&apos;);
+var xmlContentWithReplaces = xmlContentRaw.replace(&apos;&amp;lt;&apos;, &apos;&lt;&apos;).replace(&apos;&amp;gt;&apos;, &apos;&gt;&apos;);
+
+var parsedXML = new XML(xmlContentWithReplaces);
+
+var username = channelMap.get(&quot;username&quot;);
+
+responseMap.put(&apos;response&apos;, &quot;&quot;);
+
+var dataBaseConnection;
+
+try {
+	dataBaseConnection = DatabaseConnectionFactory.createDatabaseConnection(&apos;org.postgresql.Driver&apos;,&apos;jdbc:postgresql://localhost:5432/NameOfDatabaseEstablished&apos;,&apos;introducedatabaseusername&apos;,&apos;introducepasswordfordatabaseuser&apos;);
+	
+	var userIdByUsernameQuery = &quot;SELECT id FROM useraccount WHERE username = ?&quot;; 
+	var userId = dataBaseConnection.executeCachedQuery(userIdByUsernameQuery, [username]);
+	
+if(userId.size()&gt;0){
+	userId.next();
+	var id = parseInt(userId.getString(1).toString());
+
+	var correctRequest = true;
+	var failCode = &quot;not_defined&quot;;
+	
+	//TODO el xml deberia tener un campo con otro nombre en lugar de modifyID, es ambiguo
+	
+	var idRequest = parsedXML[&apos;ModifyID&apos;].toString();
+	var resources = parsedXML[&apos;Resources&apos;];
+	switch(idRequest){
+		case &quot;SetToken&quot;:
+			correctRequest = true;
+			break;
+		case &quot;SetPersonalData&quot;:
+				var allowChanges = true;
+				
+				var userGroupQuery = &quot;SELECT clinical_group FROM useraccount WHERE id = ?::INTEGER&quot;;
+				var userGroupRow = dataBaseConnection.executeCachedQuery(userGroupQuery, [id]);
+				var userGroup;
+				var needGroupUpdate = false;
+
+				var patientCode;
+				
+				if(userGroupRow.next()){
+					userGroup = userGroupRow.getString(1);
+					
+					if(userGroup == &quot;PATIENT1&quot; || userGroup == &quot;PATIENT2&quot;){ // This user is confirmed as a patient
+						allowChanges = true;
+					}else{ 
+						var patientManagementQuery = &quot;SELECT * FROM patientmanagement&quot;;
+						var patientManagementResult = dataBaseConnection.executeCachedQuery(patientManagementQuery);
+						patientManagementResult.next();
+						
+						var codeValues = (&quot;&quot; +patientManagementResult.getString(1)).split(&quot;|&quot;);
+						// logger.info(&quot;Los posibles codigos son: &quot; +codeValues.toString());
+						
+						
+						var havePatientCode = resources[&apos;PatientData&apos;][&apos;is_patient&apos;].toString();
+						patientCode = resources[&apos;PatientData&apos;][&apos;patient_code&apos;].toString();
+						logger.info(&quot;El valor de havePatientCode es; &quot; + havePatientCode);
+						if(havePatientCode == &quot;false&quot;){ // the user says s/he is not a patient
+							//logger.info(&quot;El user group extraido es: &quot; + userGroup);
+							if(userGroup == &quot;UNKNOWN_YET&quot;){ // This is the first time that this user introduce her/his data
+								userGroup = &quot;A&quot;; // group assignation
+								needGroupUpdate = true;
+							}
+							logger.info(&quot;El user group extraido es: &quot; + userGroup);
+							allowChanges = true;
+							
+						}else{ // The user says s/he is a patient
+							
+							if(isAValidCode(patientCode,&quot;TH&quot;)){ // The patient code entered is correct
+								userGroup = &quot;PATIENT1&quot;
+								allowChanges = true;
+								needGroupUpdate = true;
+							}else if(isAValidCode(patientCode,&quot;WC&quot;)){
+								userGroup = &quot;PATIENT2&quot;
+								allowChanges = true;
+								needGroupUpdate = true;
+							}else{ // The patient code entered is incorrect
+								allowChanges = false;
+								correctRequest = false;
+								failCode = &quot;unauthorized&quot;;
+							}
+						}
+					}
+				}else{
+					allowChanges = false;
+					correctRequest = false;
+				}
+			//logger.info(&quot;failcode &quot; + failCode );
+			//logger.info(&quot;aallow changes &quot; + allowChanges);
+			if(allowChanges){
+				
+				var nickname = resources[&apos;DemographicData&apos;][&apos;name&apos;].toString();
+				nickname = nickname?nickname:null;
+				var gender = resources[&apos;DemographicData&apos;][&apos;gender&apos;].toString();
+				gender = gender?gender:null;
+				var birthDate = resources[&apos;DemographicData&apos;][&apos;birthDate&apos;].toString();
+				birthDate = birthDate?birthDate:null;
+				var employmentSituation = resources[&apos;DemographicData&apos;][&apos;employmentSituation&apos;].toString();
+				employmentSituation = employmentSituation?employmentSituation:null;
+				var params = [nickname, gender, birthDate, employmentSituation, id];
+				
+				var startSmokingDate = resources[&apos;SmokingData&apos;][&apos;startSmokingDate&apos;].toString();
+				startSmokingDate = startSmokingDate?startSmokingDate:null;
+				var params2 = [startSmokingDate, id];
+				dataBaseConnection.executeUpdate(&quot;UPDATE personaldata SET nickname = ?, gender = ?, birth_date = ?::DATE, employment_situation = ? WHERE user_id = ?::INTEGER&quot;, params);
+				dataBaseConnection.executeUpdate(&quot;UPDATE smokingdata SET begin_smoking = ?::DATE  WHERE user_id = ?::INTEGER&quot;, params2);
+
+				if(needGroupUpdate){
+					dataBaseConnection.executeUpdate(&quot;UPDATE useraccount SET clinical_group = ?, patient_code = ?, clinical_group_date = CURRENT_TIMESTAMP WHERE id = ?&quot;, [userGroup, patientCode, id]);
+				}
+				
+			} 
+			break;
+		case &apos;FinishQuittingPeriod&apos;:
+			serverResponseToFinishQuittingAttemptRequest = dataBaseConnection.executeCachedQuery(&apos;SELECT finishquittingperiod(?::CHARACTER VARYING)&apos;, [username])
+			
+			if(serverResponseToFinishQuittingAttemptRequest.size()&gt;0){
+				serverResponseToFinishQuittingAttemptRequest.next();
+				var isQuittingAttemptCorrectlyFinished = serverResponseToFinishQuittingAttemptRequest.getString(1);
+				//logger.info(&quot;El resultado de finalizar el quit period por la bd es: &quot; + isQuittingAttemptCorrectlyFinished);
+				if(isQuittingAttemptCorrectlyFinished == null){
+					channelMap.put(&apos;responseStatusCode&apos;, &apos;404&apos;); //NOT FOUND the quitting period 
+					responseMap.put(&apos;response&apos;, &quot;&quot;);
+					return $r(&apos;response&apos;);
+				}
+				
+				if(isQuittingAttemptCorrectlyFinished.toString()==&apos;false&apos;){
+					channelMap.put(&apos;responseStatusCode&apos;, &apos;406&apos;); //NOT ACCEPTABLE, user is not in a quitting period
+					responseMap.put(&apos;response&apos;, &quot;&quot;);
+					return $r(&apos;response&apos;);
+				}
+			}else{
+				channelMap.put(&apos;responseStatusCode&apos;, &apos;404&apos;); //NOT FOUND the quitting period (this case maybe is unnecesary)
+				responseMap.put(&apos;response&apos;, &quot;&quot;);
+				return $r(&apos;response&apos;);
+			}
+			break;
+		case &quot;SentMessageReceived&quot;:
+			var idmessage = resources[&apos;messageId&apos;].toString();
+			serverResponseToSentMessageReceivedNotice = dataBaseConnection.executeCachedQuery(&apos;SELECT sentmessagereceived(?::CHARACTER VARYING, ?::INTEGER)&apos;, [username,idmessage])
+			
+			if(serverResponseToSentMessageReceivedNotice.size()&gt;0){
+				serverResponseToSentMessageReceivedNotice.next();
+				var isSentMessageReceivedNoticeAccepted = serverResponseToSentMessageReceivedNotice.getString(1);
+				if(isSentMessageReceivedNoticeAccepted == null){
+					channelMap.put(&apos;responseStatusCode&apos;, &apos;404&apos;); //NOT FOUND the message
+					responseMap.put(&apos;response&apos;, &quot;&quot;);
+					return $r(&apos;response&apos;);
+				}
+				
+				if(isSentMessageReceivedNoticeAccepted.toString()==&apos;false&apos;){
+					channelMap.put(&apos;responseStatusCode&apos;, &apos;401&apos;); //NOT AUTHORIZED, this message 
+					responseMap.put(&apos;response&apos;, &quot;&quot;);
+					return $r(&apos;response&apos;);
+				}
+			}else{
+				channelMap.put(&apos;responseStatusCode&apos;, &apos;404&apos;); //NOT FOUND 
+				responseMap.put(&apos;response&apos;, &quot;&quot;);
+				return $r(&apos;response&apos;);
+			}
+			break;
+		case &quot;MarkMessageUnread&quot;:
+			
+			var idmessage = resources[&apos;messageId&apos;].toString();
+			serverResponseToMarkMessageUnreadRequest = dataBaseConnection.executeCachedQuery(&apos;SELECT markmessageunread(?::CHARACTER VARYING, ?::INTEGER)&apos;, [username,idmessage])
+			
+			if(serverResponseToMarkMessageUnreadRequest.size()&gt;0){
+				serverResponseToMarkMessageUnreadRequest.next();
+				var isMarkMessageUnreadRequestAccepted = serverResponseToMarkMessageUnreadRequest.getString(1);
+				if(isMarkMessageUnreadRequestAccepted == null){
+					channelMap.put(&apos;responseStatusCode&apos;, &apos;404&apos;); //NOT FOUND the message
+					responseMap.put(&apos;response&apos;, &quot;&quot;);
+					return $r(&apos;response&apos;);
+				}
+				
+				if(isMarkMessageUnreadRequestAccepted.toString()==&apos;false&apos;){
+					channelMap.put(&apos;responseStatusCode&apos;, &apos;401&apos;); //NOT AUTHORIZED, this message 
+					responseMap.put(&apos;response&apos;, &quot;&quot;);
+					return $r(&apos;response&apos;);
+				}
+			}else{
+				channelMap.put(&apos;responseStatusCode&apos;, &apos;404&apos;); //NOT FOUND 
+				responseMap.put(&apos;response&apos;, &quot;&quot;);
+				return $r(&apos;response&apos;);
+			}
+			break;
+		case &quot;SetWeekDaysPreferences&quot;:
+			var allowDayKeys = [&quot;allowOnMonday&quot;, &quot;allowOnTuesday&quot;, &quot;allowOnWednesday&quot;, 
+			&quot;allowOnThursday&quot;, &quot;allowOnFriday&quot;, &quot;allowOnSaturday&quot;, &quot;allowOnSunday&quot;];
+			var beginTimeKeys = [&quot;beginTimeMonday&quot;, &quot;beginTimeTuesday&quot;, &quot;beginTimeWednesday&quot;, 
+			&quot;beginTimeThursday&quot;, &quot;beginTimeFriday&quot;, &quot;beginTimeSaturday&quot;, &quot;beginTimeSunday&quot;];
+			var endTimeKeys = [&quot;endTimeMonday&quot;, &quot;endTimeTuesday&quot;, &quot;endTimeWednesday&quot;, 
+			&quot;endTimeThursday&quot;, &quot;endTimeFriday&quot;, &quot;endTimeSaturday&quot;, &quot;endTimeSunday&quot;];
+
+			var totalKeys = allowDayKeys.concat(beginTimeKeys).concat(endTimeKeys);
+			var params = [];
+			for each(key in totalKeys){
+				var aux = resources[key].toString();
+				if(aux){
+					params.push(aux);
+				}else{
+					channelMap.put(&apos;responseStatusCode&apos;, &apos;400&apos;);
+					responseMap.put(&apos;response&apos;, &quot;Incomplete data&quot;);
+					return $r(&apos;response&apos;);
+				}
+			}
+			params.push(id);
+			var updateWeekdaysPreferencesQuery = &quot;UPDATE userpreferences SET send_on_monday= ?::BOOLEAN,send_on_tuesday= ?::BOOLEAN,send_on_wednesday= ?::BOOLEAN,&quot; 
+			+ &quot;send_on_thursday= ?::BOOLEAN,send_on_friday= ?::BOOLEAN,send_on_saturday= ?::BOOLEAN,send_on_sunday= ?::BOOLEAN,&quot; 
+			+ &quot;init_monday= ?::TIME,init_tuesday= ?::TIME,init_wednesday= ?::TIME,init_thursday= ?::TIME,init_friday= ?::TIME,init_saturday= ?::TIME,init_sunday= ?::TIME,&quot; 
+			+ &quot;end_monday= ?::TIME,end_tuesday= ?::TIME,end_wednesday= ?::TIME,end_thursday= ?::TIME,end_friday= ?::TIME,end_saturday= ?::TIME,end_sunday = ?::TIME&quot; 
+			+ &quot; WHERE user_id = ?::INTEGER;&quot;;
+			dataBaseConnection.executeUpdate(updateWeekdaysPreferencesQuery, params);
+			break;
+		case &quot;SetConfiguration&quot;:
+			var notDisturbOption = resources[&quot;notDisturb&quot;].toString();
+			var notDisturbUntilDate = resources[&quot;notDisturbUntil&quot;].toString();
+			var language = resources[&quot;language&quot;].toString();
+			
+			var lang_server = &quot;en&quot;;
+			if(language){
+				var aux_lang = language.substring(0,2)
+				if(aux_lang == &quot;es&quot;){
+					lang_server = aux_lang;
+				}else if(aux_lang ==&quot;zh&quot; || aux_lang ==&quot;el&quot;){
+					lang_server = aux_lang;
+				}else if(aux_lang ==&quot;ar&quot;){
+					lang_server = aux_lang;
+				}
+			}
+			updateConfigurationQuery = &quot;SELECT updateconfiguration(&apos;&quot; + username + &quot;&apos;,&quot; + notDisturbOption + &quot;,&apos;&quot; + notDisturbUntilDate + &quot;&apos;,&apos;&quot; + lang_server + &quot;&apos;)&quot;;
+			dataBaseConnection.executeUpdate(updateConfigurationQuery);
+			
+			break;
+		case &quot;SetExtendedProfile&quot;:
+
+			setExtendedProfileQuery = &quot;&quot;;
+			
+			aux = [];
+			index = 1;
+
+			for each(i in resources.children()){
+				aux.push(i.toString());
+				if(index == 1){
+					setExtendedProfileQuery = &quot;UPDATE extendedprofile SET answer_question_&quot; + index.toString() + &quot; = ?::CHARACTER VARYING&quot;;
+				}else{
+					setExtendedProfileQuery = setExtendedProfileQuery + &quot;, answer_question_&quot; + index.toString() + &quot; = ?::CHARACTER VARYING&quot;;
+				}
+				index = index + 1;
+			}
+			aux.push(id);
+			
+			setExtendedProfileQuery = setExtendedProfileQuery + &quot; WHERE user_id = ?::INTEGER&quot;;
+
+			//logger.info(setExtendedProfileQuery);
+			
+			dataBaseConnection.executeUpdate(setExtendedProfileQuery, aux);
+			
+			break;
+		default:
+			correctRequest = false;
+			break;
+	}
+
+	//logger.info(&quot;failcode &quot; + failCode );
+	
+	if(correctRequest){
+		channelMap.put(&apos;responseStatusCode&apos;, &apos;201&apos;);
+		responseMap.put(&apos;response&apos;, &quot;&quot;);
+	}else if(failCode == &quot;unauthorized&quot;){
+		//logger.info(&quot;Entra en acceso no autorizado&quot;);
+		channelMap.put(&apos;responseStatusCode&apos;, &apos;401&apos;);
+		responseMap.put(&apos;response&apos;, &quot;&quot;);
+	}else{
+		channelMap.put(&apos;responseStatusCode&apos;, &apos;404&apos;);
+		responseMap.put(&apos;response&apos;, &quot;&quot;);
+	}
+	return $r(&apos;response&apos;);
+
+} else{
+	channelMap.put(&apos;responseStatusCode&apos;, &apos;404&apos;);
+	
+}
+
+channelMap.put(&apos;responseContentType&apos;, &apos;text/xml&apos;);
+
+}catch(e){
+	channelMap.put(&apos;responseStatusCode&apos;, &apos;400&apos;);
+	responseMap.put(&apos;response&apos;, &quot;&quot;);
+	channelMap.put(&apos;error&apos;, e);
+}finally {
+	if (dataBaseConnection) { 
+		dataBaseConnection.close();
+	}
+	channelMap.remove(&quot;nick&quot;);
+}
+</script>
+      </properties>
+      <transformer version="3.5.1">
+        <elements/>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>XML</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements/>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>XML</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+            <name>isModifyRequestXML</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>var xmlContentRaw = connectorMessage.getRawData();
+var xmlContentWithReplaces = xmlContentRaw.replace(&apos;&amp;lt;&apos;, &apos;&lt;&apos;).replace(&apos;&amp;gt;&apos;, &apos;&gt;&apos;);
+
+return xmlContentWithReplaces.indexOf(&quot;&lt;ModifyUserInformation&gt;&quot;) !== -1</script>
+          </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        </elements>
+      </filter>
+      <transportName>JavaScript Writer</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+    <connector version="3.5.1">
+      <metaDataId>4</metaDataId>
+      <name>retrieveResource</name>
+      <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>false</queueEnabled>
+          <sendFirst>false</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>0</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>1</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <script>var xmlContentRaw = channelMap.get(&apos;msgContent&apos;);
+var xmlContentWithReplaces = xmlContentRaw.replace(&apos;&amp;lt;&apos;, &apos;&lt;&apos;).replace(&apos;&amp;gt;&apos;, &apos;&gt;&apos;);
+
+var xml = new XML(xmlContentWithReplaces);
+
+var username = channelMap.get(&quot;username&quot;);
+
+responseMap.put(&apos;response&apos;, &quot;&quot;);
+
+var dataBaseConnection;
+
+var xmlResponse = &quot;&quot;;
+
+try {
+	dataBaseConnection = DatabaseConnectionFactory.createDatabaseConnection(&apos;org.postgresql.Driver&apos;,&apos;jdbc:postgresql://localhost:5432/NameOfDatabaseEstablished&apos;,&apos;introducedatabaseusername&apos;,&apos;introducepasswordfordatabaseuser&apos;);
+	var userInformationQuery = &quot;SELECT id, date_register, clinical_group FROM useraccount WHERE username = ?&quot;; 
+
+	var userInformation = dataBaseConnection.executeCachedQuery(userInformationQuery, [username]);
+	
+if(userInformation.size()&gt;0){
+	userInformation.next();
+	var id = parseInt(userInformation.getString(1).toString());
+	var date_register = userInformation.getString(2).substring(0,16);
+	
+	//TODO el xml deberia tener un campo con otro nombre en lugar de modifyID, es ambiguo
+	//Habria que considerar cambiar el campo de gender y ponerle mas caracteres que 3 para que no de error (aunque se puede dejar asi y controlarlo)
+	var idRequest = xml[&apos;RetrieveID&apos;].toString();
+
+	var correctRequest = true;
+	
+	switch(idRequest){
+		case &quot;GetAllData&quot;:
+			//Get PersonalData
+			// - Personal data
+			var personalDataQuery = &quot;SELECT nickname, gender, birth_date, employment_situation FROM personaldata WHERE user_id = ?&quot;; 
+			var personalData = dataBaseConnection.executeCachedQuery(personalDataQuery, [id]);
+			// - Smoking data withouth quitting periods
+			var mainSmokingDataQuery = &quot;SELECT begin_smoking, is_in_quitting_period, id FROM smokingdata WHERE user_id = ?&quot;;
+			var mainSmokingData = dataBaseConnection.executeCachedQuery(mainSmokingDataQuery, [id]);
+			// - Extended profile
+			var extendedProfileDataQuery = &quot;SELECT * FROM extendedprofile WHERE user_id = ?&quot;;
+			var extendedProfileData = dataBaseConnection.executeCachedQuery(extendedProfileDataQuery, [id]);
+			
+			if(personalData.size() &gt; 0 &amp;&amp; mainSmokingData.size() &gt; 0 &amp;&amp; extendedProfileData.size() &gt; 0){
+				//Start xml
+				xmlResponse = &quot;&lt;?xml version=&apos;1.0&apos; encoding=&apos;UTF-8&apos; standalone=&apos;yes&apos; ?&gt;&quot; +&quot;&lt;RetrieveUserResults&gt;&lt;ServerID&gt;MirthConnect&lt;/ServerID&gt;&lt;RetrieveID&gt;GetAllData&lt;/RetrieveID&gt;&lt;Results&gt;&quot;;
+				xmlResponse = xmlResponse + &quot;&lt;register_date&gt;&quot; + date_register + &quot;&lt;/register_date&gt;&quot;;
+				//Adding personalData
+				personalData.next();
+				xmlResponse = xmlResponse + &quot;&lt;PersonalData&gt;&quot;;
+				//Adding demographicData
+				xmlResponse = xmlResponse + &quot;&lt;DemographicData&gt;&quot;;
+				xmlResponse = xmlResponse + &quot;&lt;name&gt;&quot; + personalData.getString(1) + &quot;&lt;/name&gt;&quot;;
+				xmlResponse = xmlResponse + &quot;&lt;gender&gt;&quot; + personalData.getString(2) + &quot;&lt;/gender&gt;&quot;;
+				xmlResponse = xmlResponse + &quot;&lt;birth_date&gt;&quot; + personalData.getString(3) + &quot;&lt;/birth_date&gt;&quot;;
+				xmlResponse = xmlResponse + &quot;&lt;employment_situation&gt;&quot; + personalData.getString(4) + &quot;&lt;/employment_situation&gt;&quot;;
+				//Clossing demographicData
+				xmlResponse = xmlResponse + &quot;&lt;/DemographicData&gt;&quot;;
+
+				var clinical_group = userInformation.getString(3);
+				
+				xmlResponse = xmlResponse + &quot;&lt;ClinicalData&gt;&quot;;
+
+				var clinical_group_code;
+				if(clinical_group == &quot;PATIENT1&quot; || clinical_group == &quot;PATIENT2&quot;){
+					// logger.info(&quot;Grupo paciente&quot;);
+					clinical_group_code = 1;
+					
+				} else if(clinical_group == &quot;A&quot; || clinical_group == &quot;B&quot;){
+					// logger.info(&quot;Grupo no paciente&quot;)
+					clinical_group_code = 2;
+				} else{
+					// logger.info(&quot;Grupo desconocido&quot;);
+					clinical_group_code = 0;
+				}
+				
+				xmlResponse = xmlResponse + &quot;&lt;clinical_group&gt;&quot; + clinical_group_code + &quot;&lt;/clinical_group&gt;&quot;
+
+				var codeValue = &quot;&quot;;
+				if(clinical_group == &quot;PATIENT1&quot; || clinical_group == &quot;PATIENT2&quot;){
+					var patientManagementQuery = &quot;SELECT * FROM patientmanagement&quot;;
+					var patientManagementResult = dataBaseConnection.executeCachedQuery(patientManagementQuery);
+					patientManagementResult.next();
+					
+					var codeValues = (&quot;&quot; + patientManagementResult.getString(1)).split(&quot;|&quot;);
+					
+					if(clinical_group == &quot;PATIENT1&quot;){
+						codeValue = codeValues[0];
+					}else{
+						codeValue = codeValues[1];
+					}
+					channelMap.put(&quot;patient_code&quot;, patientManagementResult.getString(1));
+				}
+				
+				xmlResponse = xmlResponse + &quot;&lt;patient_code&gt;&quot; + codeValue + &quot;&lt;/patient_code&gt;&quot;
+				xmlResponse = xmlResponse + &quot;&lt;/ClinicalData&gt;&quot;;
+				
+				mainSmokingData.next();
+				//Adding smokingData
+				xmlResponse = xmlResponse + &quot;&lt;SmokingData&gt;&quot;;
+				xmlResponse = xmlResponse + &quot;&lt;begin_smoking_date&gt;&quot; + mainSmokingData.getString(1) + &quot;&lt;/begin_smoking_date&gt;&quot; ;
+				xmlResponse = xmlResponse + &quot;&lt;in_quitting_period&gt;&quot; + mainSmokingData.getString(2) + &quot;&lt;/in_quitting_period&gt;&quot; ;
+				
+				//Adding quittingPeriods
+				xmlResponse = xmlResponse + &quot;&lt;QuittingPeriods&gt;&quot;;
+				
+				var allSmokingDataQuery = &quot;SELECT quittingperiod.id, smokingdata_id, start_date, register_end_date, weekly_expenditure, currency, daily_cigarettes,&quot;
+				+ &quot;motivationtest.p1, motivationtest.p2, motivationtest.p3, motivationtest.p4, motivationtest.test_result,&quot; + 
+				&quot;adictiontest.p1, adictiontest.p2, adictiontest.p3, adictiontest.p4, adictiontest.p5, adictiontest.p6, adictiontest.test_result&quot;+
+				&quot; FROM quittingperiod &quot; + &quot;INNER JOIN previoussmokinghabits ON quittingperiod.id = previoussmokinghabits.quittingperiod_id&quot; + 
+				&quot; INNER JOIN motivationtest ON quittingperiod.id = motivationtest.quittingperiod_id&quot; + 
+				&quot; INNER JOIN adictiontest ON quittingperiod.id = adictiontest.quittingperiod_id WHERE smokingdata_id = ?::INTEGER&quot; + 
+				&quot; ORDER BY register_date,quittingperiod.id&quot;;
+				var smokingData = dataBaseConnection.executeCachedQuery(allSmokingDataQuery, [parseInt(mainSmokingData.getString(3))]);
+				
+				while(smokingData.next()){
+					xmlResponse = xmlResponse + &quot;&lt;item&gt;&quot;;
+					xmlResponse = xmlResponse + &quot;&lt;id_period&gt;&quot; + smokingData.getString(1) + &quot;&lt;/id_period&gt;&quot;;
+					xmlResponse = xmlResponse + &quot;&lt;start_date&gt;&quot; + smokingData.getString(3) + &quot;&lt;/start_date&gt;&quot;;
+					xmlResponse = xmlResponse + &quot;&lt;end_date&gt;&quot; + smokingData.getString(4) + &quot;&lt;/end_date&gt;&quot;;
+					xmlResponse = xmlResponse + &quot;&lt;weekly_expenditure&gt;&quot; + smokingData.getString(5) + &quot;&lt;/weekly_expenditure&gt;&quot;;
+					xmlResponse = xmlResponse + &quot;&lt;currency&gt;&quot; + smokingData.getString(6) + &quot;&lt;/currency&gt;&quot;;
+					xmlResponse = xmlResponse + &quot;&lt;daily_cigarettes&gt;&quot; + smokingData.getString(7) + &quot;&lt;/daily_cigarettes&gt;&quot;;
+					xmlResponse = xmlResponse + &quot;&lt;richmond_result&gt;&quot; + smokingData.getString(12) + &quot;&lt;/richmond_result&gt;&quot;;
+					xmlResponse = xmlResponse + &quot;&lt;fagerstrom_result&gt;&quot; + smokingData.getString(19) + &quot;&lt;/fagerstrom_result&gt;&quot;;
+					xmlResponse = xmlResponse + &quot;&lt;/item&gt;&quot;;
+				}
+				
+				xmlResponse = xmlResponse + &quot;&lt;/QuittingPeriods&gt;&quot;;
+				// Closing smokingData
+				xmlResponse = xmlResponse + &quot;&lt;/SmokingData&gt;&quot;;
+
+				// Adding Extended Profile
+				xmlResponse = xmlResponse + &quot;&lt;ExtendedProfile&gt;&quot;;
+				extendedProfileData.next();
+				numberOfRows = extendedProfileData.getMetaData().getColumnCount();
+				numberOfQuestions = numberOfRows-2;
+				for(i = 1; i&lt;= numberOfQuestions;i++){ 
+					initTagQuestioni = &quot;&lt;extended_question_&quot; + i.toString() +&quot;&gt;&quot;;
+					endTagQuestioni = &quot;&lt;/extended_question_&quot; + i.toString() +&quot;&gt;&quot;;
+					
+					xmlResponse = xmlResponse + initTagQuestioni;
+					xmlResponse = xmlResponse + extendedProfileData.getString(i+2); //getString(1) contains the id of this table and getString(2) the foreign key
+					xmlResponse = xmlResponse + endTagQuestioni;
+					
+				}
+				//Clossing extended profile
+				xmlResponse = xmlResponse + &quot;&lt;/ExtendedProfile&gt;&quot;; 
+				
+				// Closing Personal data
+				xmlResponse = xmlResponse + &quot;&lt;/PersonalData&gt;&quot;;
+
+				var preferencesQuery = &quot;SELECT language_name, date_not_disturb, option_not_disturb,&quot;
+				+ &quot;send_on_monday, send_on_tuesday, send_on_wednesday, send_on_thursday, send_on_friday, send_on_saturday, send_on_sunday,&quot;
+				+ &quot;init_monday, init_tuesday, init_wednesday, init_thursday, init_friday, init_saturday, init_sunday,&quot; 
+				+ &quot;end_monday, end_tuesday, end_wednesday, end_thursday, end_friday, end_saturday, end_sunday&quot; 
+				+ &quot; FROM userpreferences INNER JOIN sfblanguage ON language_id = sfblanguage.id WHERE user_id = ?&quot;;
+				preferences = dataBaseConnection.executeCachedQuery(preferencesQuery, [id]);
+				if(preferences.size()&gt;0){
+					preferences.next();
+					// Adding preferences
+					xmlResponse = xmlResponse + &quot;&lt;Preferences&gt;&quot;;
+					xmlResponse = xmlResponse + &quot;&lt;language&gt;&quot; + preferences.getString(1) + &quot;&lt;/language&gt;&quot;;
+					xmlResponse = xmlResponse + &quot;&lt;date_not_disturb&gt;&quot; + preferences.getString(2).substring(0,16) + &quot;&lt;/date_not_disturb&gt;&quot;;
+					xmlResponse = xmlResponse + &quot;&lt;not_disturb&gt;&quot; + preferences.getString(3) + &quot;&lt;/not_disturb&gt;&quot;;
+					
+					//Adding week days preferences
+					xmlResponse = xmlResponse + &quot;&lt;WeekDaysPreferences&gt;&quot;;
+					
+					var dayKeys = [&quot;monday&quot;,&quot;tuesday&quot;,&quot;wednesday&quot;,&quot;thursday&quot;,&quot;friday&quot;,&quot;saturday&quot;,&quot;sunday&quot;];
+					var prefixKeys = [&quot;allow_on_&quot;, &quot;begin_time_&quot;, &quot;end_time_&quot;];
+					var lPrefix = prefixKeys.length;
+					for(var i = 0; i &lt;lPrefix; i++){
+						var lDays = dayKeys.length;
+						for(var j = 0; j&lt;lDays; j++){
+							var beginElem = &quot;&lt;&quot; + prefixKeys[i]+dayKeys[j] + &quot;&gt;&quot;;
+							var endElem = &quot;&lt;/&quot; + prefixKeys[i]+dayKeys[j] + &quot;&gt;&quot;;
+							var column = 4+j+(i*lDays);
+							var aux = preferences.getString(column);
+							
+							if(aux==&quot;true&quot; || aux ==&quot;false&quot;){
+								aux = aux.substring(0,1);
+							}else{
+								aux = aux.substring(0,5);
+							}
+							xmlResponse = xmlResponse + beginElem + aux + endElem;
+					     }
+					}
+					//Closing week days preferences
+					xmlResponse = xmlResponse + &quot;&lt;/WeekDaysPreferences&gt;&quot;
+					// Adding preferences
+					xmlResponse = xmlResponse + &quot;&lt;/Preferences&gt;&quot;
+					
+				}
+				
+				// Adding Messages 
+				var sentMesssageQuery = &quot;SELECT sentmessage.id, message.message_content, is_read, vote, received_date&quot; 
+				 + &quot; FROM sentmessage INNER JOIN message ON message.id = sentmessage.message_id&quot;
+				 + &quot; WHERE sentmessage.user_id = ? AND received_date IS NOT NULL AND message.message_type = 1 ORDER BY received_date&quot;;
+
+				sentMessages = dataBaseConnection.executeCachedQuery(sentMesssageQuery, [id]);
+
+				if(sentMessages.size()&gt;0){
+					xmlResponse = xmlResponse + &quot;&lt;Messages&gt;&quot;;
+
+					
+					while(sentMessages.next()){
+						xmlResponse = xmlResponse + &quot;&lt;item&gt;&quot;;
+						xmlResponse = xmlResponse + &quot;&lt;id_server&gt;&quot; + sentMessages.getString(1) + &quot;&lt;/id_server&gt;&quot;;
+
+						var messageText =   String(sentMessages.getString(2)).valueOf();
+
+						// Replace &lt;Name&gt; with the user name in personal data
+						var regExpName = /&lt;(.+?)&gt;/ig;
+						processedMessage = messageText.replace(regExpName,String(personalData.getString(1)).valueOf());
+						// logger.info(&quot;El texto con el nombre del usuario puesto es: &quot; + processedMessage);
+						
+						xmlResponse = xmlResponse + &quot;&lt;text&gt;&quot; + processedMessage + &quot;&lt;/text&gt;&quot;;
+						
+						var is_read = sentMessages.getString(3) == &quot;true&quot; ? 1 : 0;
+
+						xmlResponse = xmlResponse + &quot;&lt;is_read&gt;&quot; + is_read + &quot;&lt;/is_read&gt;&quot;;
+
+						xmlResponse = xmlResponse + &quot;&lt;vote&gt;&quot; + sentMessages.getString(4) + &quot;&lt;/vote&gt;&quot;;
+						xmlResponse = xmlResponse + &quot;&lt;received_date&gt;&quot; + sentMessages.getString(5).substring(0,19) + &quot;&lt;/received_date&gt;&quot;;
+						xmlResponse = xmlResponse + &quot;&lt;/item&gt;&quot;;
+					}
+					xmlResponse = xmlResponse + &quot;&lt;/Messages&gt;&quot;;
+				}
+				
+				//Clossing xml
+				xmlResponse = xmlResponse + &quot;&lt;/Results&gt;&lt;/RetrieveUserResults&gt;&quot;;
+			}
+			else{
+				channelMap.put(&apos;responseStatusCode&apos;, &apos;404&apos;);
+			}
+			break;
+			
+		default:
+			correctRequest = false
+			break;
+	}
+
+	if(correctRequest){
+		channelMap.put(&apos;responseStatusCode&apos;, &apos;200&apos;);
+		responseMap.put(&apos;response&apos;, xmlResponse);
+	}else{
+		channelMap.put(&apos;responseStatusCode&apos;, &apos;404&apos;);
+		responseMap.put(&apos;response&apos;, &quot;&quot;);
+	}
+	return  $r(&apos;response&apos;);
+
+} else{
+	channelMap.put(&apos;responseStatusCode&apos;, &apos;404&apos;);
+	
+}
+
+channelMap.put(&apos;responseContentType&apos;, &apos;text/xml&apos;);
+
+}catch(e){
+	channelMap.put(&apos;responseStatusCode&apos;, &apos;400&apos;);
+	responseMap.put(&apos;response&apos;, &quot;&quot;);
+	channelMap.put(&apos;error&apos;, e);
+} finally {
+	if (dataBaseConnection) { 
+		dataBaseConnection.close();
+	}
+	channelMap.remove(&quot;nick&quot;);
+}
+</script>
+      </properties>
+      <transformer version="3.5.1">
+        <elements/>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>XML</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements/>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>XML</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+            <name>isRetrieveRequestXML</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>var xmlContentRaw = connectorMessage.getRawData();
+var xmlContentWithReplaces = xmlContentRaw.replace(&apos;&amp;lt;&apos;, &apos;&lt;&apos;).replace(&apos;&amp;gt;&apos;, &apos;&gt;&apos;);
+
+return xmlContentWithReplaces.indexOf(&quot;&lt;RetrieveUserInformation&gt;&quot;) !== -1;</script>
+          </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        </elements>
+      </filter>
+      <transportName>JavaScript Writer</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+    <connector version="3.5.1">
+      <metaDataId>5</metaDataId>
+      <name>addResource</name>
+      <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>false</queueEnabled>
+          <sendFirst>false</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>0</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>1</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <script>var xmlContentRaw = channelMap.get(&apos;msgContent&apos;);
+var xmlContentWithReplaces = xmlContentRaw.replace(&apos;&amp;lt;&apos;, &apos;&lt;&apos;).replace(&apos;&amp;gt;&apos;, &apos;&gt;&apos;);
+
+var xml = new XML(xmlContentWithReplaces);
+
+var username = channelMap.get(&quot;username&quot;);
+
+responseMap.put(&apos;response&apos;, &quot;&quot;);
+
+var dataBaseConnection;
+
+try {
+	dataBaseConnection = DatabaseConnectionFactory.createDatabaseConnection(&apos;org.postgresql.Driver&apos;,&apos;jdbc:postgresql://localhost:5432/NameOfDatabaseEstablished&apos;,&apos;introducedatabaseusername&apos;,&apos;introducepasswordfordatabaseuser&apos;);
+
+	var userIdQuery = &quot;SELECT id FROM useraccount WHERE username = ?&quot;; 
+
+	var result = dataBaseConnection.executeCachedQuery(userIdQuery, [username]);
+	
+	
+if(result.size()&gt;0){
+	result.next();
+	var id = parseInt(result.getString(1).toString());
+	
+	var idRequest = xml[&apos;AddID&apos;].toString();
+	var resources = xml[&apos;Resources&apos;];
+
+	var correctRequest = true;
+	
+	switch(idRequest){
+		case &quot;AddQuittingPeriod&quot;:
+				
+				var startPeriod = resources[&apos;startQuittingPeriodDate&apos;].toString();
+				startPeriod = startPeriod?startPeriod:null;
+				var dailyCigarettes = resources[&apos;dailyCigarettes&apos;].toString();
+				dailyCigarettes = dailyCigarettes?dailyCigarettes:null;
+				var weeklyExpenditure = resources[&apos;weeklyExpenditure&apos;].toString();
+				weeklyExpenditure = weeklyExpenditure?weeklyExpenditure:null;
+				var currency = resources[&apos;currency&apos;].toString();
+				currency = currency?currency:null;
+				var fagerstrom = resources[&apos;TestResults&apos;][&apos;FagerstromTest&apos;];
+				var richmond = resources[&apos;TestResults&apos;][&apos;RichmondTest&apos;];
+				
+				//var query = &quot;SELECT addquittingperiod(?::CHARACTER VARYING, ?::DATE, ?::NUMERIC, ?::NUMERIC, ?::INTEGER[], ?::INTEGER[])&quot;
+				
+				//var query = &quot;SELECT addquittingperiod(?::CHARACTER VARYING, ?::DATE, ?::NUMERIC, ?::NUMERIC, ?::CHARACTER VARYING, ?::INTEGER[], ?::INTEGER[])&quot;;
+				
+				aux = [];
+				for each(i in fagerstrom.children()){
+						aux.push(i);
+				}
+				
+				//params.push(&apos;{&apos;+ aux.toString() +&apos;}&apos;);
+
+				aux2 = [];
+				for each(i in richmond.children()){
+						aux2.push(i);
+
+				}
+				var query = &quot;SELECT addquittingperiod(&apos;&quot;+username+&quot;&apos;, &apos;&quot;+startPeriod+&quot;&apos;, &quot;+dailyCigarettes+&quot;, &quot;+weeklyExpenditure+ &quot;,&apos;&quot; + currency + &quot;&apos;, &apos;{&quot;+aux+&quot;}&apos;, &apos;{&quot;+aux2+&quot;}&apos;)&quot;;
+				
+				params = [username, startPeriod, dailyCigarettes, weeklyExpenditure, currency, aux, aux2];
+				
+				//params.push(&apos;{&apos; + aux.toString() + &apos;}&apos;);
+				
+				
+				
+				//var result = dataBaseConnection.executeUpdate(query, params);
+				var result = dataBaseConnection.executeUpdate(query);
+				
+				
+			break;
+		case &quot;AddMessageInteraction&quot;:
+		
+			for each (item in resources[&apos;item&apos;]){
+				var idMessage = item[&apos;idMessage&apos;].toString();
+				var readDate = item[&apos;readDate&apos;].toString();
+				var readTime = item[&apos;readTime&apos;].toString();
+				var secondsLecture = item[&apos;secondsLecture&apos;].toString();
+				var vote = item[&apos;vote&apos;].toString();
+				
+				var secondsBeforeLecture = item[&apos;secondsBeforeLecture&apos;].toString();
+				if(idMessage &amp;&amp; readDate &amp;&amp; readTime &amp;&amp; secondsLecture &amp;&amp; vote &amp;&amp; secondsBeforeLecture){
+					var readTimestamp = readDate + &quot; &quot; + readTime;
+					
+					var query = &quot;SELECT addmessageinteraction(&apos;&quot; + username + &quot;&apos;, &quot; + idMessage + &quot;, &apos;&quot; + readTimestamp + &quot;&apos;, &quot; + secondsLecture + &quot;, &quot; + vote + &quot;, &quot;  + secondsBeforeLecture +&quot;)&quot;;
+					
+					result2 = dataBaseConnection.executeCachedQuery(query);
+					if(result2.size()&gt;0){
+						result2.next();
+						var res = result2.getString(1);
+				
+						if(res == null){
+							channelMap.put(&apos;responseStatusCode&apos;, &apos;404&apos;); //NOT FOUND the message
+							responseMap.put(&apos;response&apos;, &quot;&quot;);
+							return $r(&apos;response&apos;);
+						}
+				
+						if(res.toString()==&apos;false&apos;){
+							channelMap.put(&apos;responseStatusCode&apos;, &apos;401&apos;); //NOT AUTHORIZED, this message 
+							responseMap.put(&apos;response&apos;, &quot;&quot;);
+							return $r(&apos;response&apos;);
+						}
+						}else{
+							channelMap.put(&apos;responseStatusCode&apos;, &apos;404&apos;); //NOT FOUND the quitting period (this case maybe is unnecesary)
+							responseMap.put(&apos;response&apos;, &quot;&quot;);
+							return $r(&apos;response&apos;);
+						}
+						dataBaseConnection.executeUpdate(&quot;UPDATE sentmessage SET received_date = (date &apos;&quot; + readTimestamp + &quot;&apos; - interval &apos;&quot; + secondsBeforeLecture + &quot;s&apos;) WHERE id = &quot; + idMessage + &quot; AND received_date IS NULL&quot;);
+				}else{
+					//TODO: cambiar el codigo de error a uno mas apropiado si procede
+					channelMap.put(&apos;responseStatusCode&apos;, &apos;400&apos;);
+					responseMap.put(&apos;response&apos;, &quot;&quot;);
+					return $r(&apos;response&apos;);
+				}
+			}
+			break;
+		case &quot;AddAppInteraction&quot;:
+			for each (item in resources[&apos;item&apos;]){
+				var section = item[&apos;section&apos;].toString();
+				var date = item[&apos;date&apos;].toString();
+				var time = item[&apos;time&apos;].toString();
+				var duration = item[&apos;millisecondsDuration&apos;].toString();
+				if(section &amp;&amp; date &amp;&amp; time &amp;&amp; duration){
+					var readTimestamp = date + &quot; &quot; + time;
+					var query = &quot;INSERT INTO apphistory (section, datestart, milliseconds_duration, user_id)  VALUES (&apos;&quot; + section + &quot;&apos;, &apos;&quot; + readTimestamp + &quot;&apos;, &quot; + duration + &quot;, &quot; + id +  &quot;)&quot;;
+					
+					result2 = dataBaseConnection.executeUpdate(query);
+					
+				}else{
+					//TODO: cambiar el codigo de error a uno mas apropiado si procede
+					channelMap.put(&apos;responseStatusCode&apos;, &apos;400&apos;);
+					responseMap.put(&apos;response&apos;, &quot;&quot;);
+					return $r(&apos;response&apos;);
+				}
+			}
+			break;
+		case &quot;AddFitnessActivity&quot;:
+
+			// UPSERT STRUCTURE NOT ALLOWED IN POSTGRESQL VERSIONS &lt; 9.4 
+			/*var addFitnessActivityQuery = &quot;INSERT INTO fitnessactivity (activity_date, activity_time, user_id) VALUES (?::DATE, ?::NUMERIC, ?::INTEGER)&quot; 
+									+ &quot; ON CONFLICT (activity_date, user_id) DO UPDATE SET activity_time = EXCLUDED.activity_time;&quot;;*/
+			var addFitnessActivityQuery = &quot;SELECT upsertfitnessactivity(?::DATE, ?::NUMERIC, ?::CHARACTER VARYING)&quot;;
+			for each (item in resources[&apos;item&apos;]){
+				var fitnessValue = item[&apos;fitnessValue&apos;].toString();
+				var registerDay = item[&apos;activityDate&apos;].toString();
+				if(fitnessValue &amp;&amp; registerDay){
+					//logger.info(&quot;data (addFitness): &quot; + registerDay + &quot;, &quot; + fitnessValue + &quot;, &quot; + username);
+					result = dataBaseConnection.executeUpdate(addFitnessActivityQuery, [registerDay, fitnessValue, username]);
+					
+				}else{
+					//TODO: cambiar el codigo de error a uno mas apropiado si procede
+					channelMap.put(&apos;responseStatusCode&apos;, &apos;400&apos;);
+					responseMap.put(&apos;response&apos;, &quot;&quot;);
+					return $r(&apos;response&apos;);
+				}
+			}
+			break;
+		case &quot;AddMiniGamesActivity&quot;:
+			for each (item in resources[&apos;item&apos;]){
+				
+				var isValid = false;
+				
+				var miniGameName = item[&apos;name&apos;].toString();
+				var score = item[&apos;score&apos;].toString();
+				var date = item[&apos;date&apos;].toString();
+				var time = item[&apos;time&apos;].toString();
+				
+				if(miniGameName &amp;&amp; score &amp;&amp; date &amp;&amp; time){
+					var dateTimestamp = date + &quot; &quot; + time;	
+					if(miniGameName == &apos;WhackAMole&apos;){
+						var addMinigamesActivityQuery = &quot;INSERT INTO minigamesactivity (minigame_name, score, play_date, user_id) VALUES (?::CHARACTER VARYING, ?::INTEGER, &apos;&quot;
+													+ dateTimestamp + &quot;&apos;::TIMESTAMP WITHOUT TIME ZONE, ?::INTEGER)&quot;;
+						dataBaseConnection.executeUpdate(addMinigamesActivityQuery, [miniGameName, score, id]);
+						isValid = true;
+					}else{
+						var penalties = item[&apos;penalties&apos;].toString();
+						if(penalties){
+							var addMinigamesActivityQuery = &quot;INSERT INTO minigamesactivity (minigame_name, score, penalties, play_date, user_id) VALUES (?::CHARACTER VARYING, ?::INTEGER, ?::INTEGER, &apos;&quot;
+													+ dateTimestamp + &quot;&apos;::TIMESTAMP WITHOUT TIME ZONE, ?::INTEGER)&quot;;
+							dataBaseConnection.executeUpdate(addMinigamesActivityQuery, [miniGameName, score, penalties, id]);
+							isValid = true;
+						}
+					}
+				}
+				if(!isValid){
+					//TODO: cambiar el codigo de error a uno mas apropiado si procede
+					channelMap.put(&apos;responseStatusCode&apos;, &apos;400&apos;);
+					responseMap.put(&apos;response&apos;, &quot;&quot;);
+					return $r(&apos;response&apos;);
+				}
+			}
+			break;
+		default:
+			correctResponse = false;
+			break;
+		
+	}
+
+	if(correctRequest){
+		channelMap.put(&apos;responseStatusCode&apos;, &apos;201&apos;);
+		responseMap.put(&apos;response&apos;, &quot;&quot;);
+	}else{
+		channelMap.put(&apos;responseStatusCode&apos;, &apos;404&apos;);
+		responseMap.put(&apos;response&apos;, &quot;&quot;);
+	}
+	return $r(&apos;response&apos;);
+
+} else{
+	channelMap.put(&apos;responseStatusCode&apos;, &apos;404&apos;);
+	
+}
+
+channelMap.put(&apos;responseContentType&apos;, &apos;text/xml&apos;);
+
+}catch(e){
+	channelMap.put(&apos;responseStatusCode&apos;, &apos;400&apos;);
+	responseMap.put(&apos;response&apos;, &quot;&quot;);
+	channelMap.put(&apos;error&apos;, e);
+} finally {
+	if (dataBaseConnection) { 
+		dataBaseConnection.close();
+	}
+	channelMap.remove(&quot;nick&quot;);
+}</script>
+      </properties>
+      <transformer version="3.5.1">
+        <elements/>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>XML</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements/>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>XML</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+            <name>isAddRequestXML</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>var xmlContentRaw = connectorMessage.getRawData();
+var xmlContentWithReplaces = xmlContentRaw.replace(&apos;&amp;lt;&apos;, &apos;&lt;&apos;).replace(&apos;&amp;gt;&apos;, &apos;&gt;&apos;);
+
+return xmlContentWithReplaces.indexOf(&quot;&lt;AddUserInformation&gt;&quot;) !== -1;</script>
+          </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        </elements>
+      </filter>
+      <transportName>JavaScript Writer</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+    <connector version="3.5.1">
+      <metaDataId>6</metaDataId>
+      <name>sendChangePasswordLink</name>
+      <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>false</queueEnabled>
+          <sendFirst>false</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>0</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>1</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <script>var user = channelMap.get(&apos;email&apos;);
+var userId = channelMap.get(&apos;userId&apos;);
+var lang = channelMap.get(&apos;language&apos;);
+
+responseMap.put(&apos;response&apos;, &quot;&quot;);
+
+var tokenGenerated = &apos;&apos;;
+var possible = &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&quot;;
+
+for( var i=0; i &lt; 16; i++ )
+	tokenGenerated += possible.charAt(Math.floor(Math.random() * possible.length));
+
+dataBaseConnection = DatabaseConnectionFactory.createDatabaseConnection(&apos;org.postgresql.Driver&apos;,&apos;jdbc:postgresql://localhost:5432/NameOfDatabaseEstablished&apos;,&apos;introducedatabaseusername&apos;,&apos;introducepasswordfordatabaseuser&apos;);
+
+
+insertTokenRequestQuery = &quot;INSERT INTO changepasswordrequest(token, user_id, request_date) VALUES (&apos;&quot; + tokenGenerated.toString()+ &quot;&apos;,&quot;+ userId.toString() + &quot;, CURRENT_TIMESTAMP)&quot;;
+
+dataBaseConnection.executeUpdate(insertTokenRequestQuery);
+
+accessToChangePasswordUrl = &quot;&quot; + user + &quot;&amp;token=&quot; + tokenGenerated;
+
+var langEmailTitle = &quot;Change password&quot;;
+var langEmailFragment = &quot;You can change your password by accessing this link: &quot;;
+var langEmailLink = &quot;Change my password.&quot;;
+var langTo = &quot;Quit&amp;Return user.&quot;;
+var langFrom = &quot;Quit&amp;Return&quot;;
+var langSubject=&quot;Request for password change in Quit&amp;Return.&quot;;
+var langInvalidError = &quot;Your email client does not support HTML messages.&quot;;
+
+logger.info(&quot;El idoma es:&quot; + lang);
+lang = lang.substring(0,2);
+logger.info(&quot;El idioma resumido es:&quot; + lang);
+if(lang == &quot;zh&quot;){
+	langEmailTitle = &quot;更改我的密碼&quot;;
+	langEmailFragment = &quot;您可以透過以下連結更改您的密碼:&quot;;
+	langEmailLink = &quot;更改我的密碼。&quot;;
+	langTo = &quot;有戒有還用戶。&quot;;
+	langFrom = &quot;有戒有還。&quot;;
+	langSubject=&quot;有戒有還之密碼變更申請。&quot;;
+	langInvalidError = &quot;您的電子信箱不支援HTML語法。&quot;;
+}else if(lang ==&quot;el&quot;){
+	langEmailTitle = &quot;Αλλαγή κωδικού&quot;;
+	langEmailFragment = &quot;Μπορείς να αλλάξεις τον κωδικό πρόσβασής σου μεταβαίνοντας σε αυτόν τον σύνδεσμο:&quot;;
+	langEmailLink = &quot;Αλλαγή του κωδικού μου&quot;;
+	langTo = &quot;&quot;;
+	langFrom = &quot;Quit&amp;Return&quot;;
+	langSubject=&quot;Αίτημα αλλαγής κωδικού πρόσβασης στο Quit&amp;Return&quot;;
+	langInvalidError = &quot;η εφαρμογή του ηλεκτρονικού ταχυδρομείου σου δεν υποστηρίζει μηνύματα HTML&quot;;
+}else if(lang ==&quot;es&quot;){
+	langEmailTitle = &quot;Cambiar contraseña&quot;;
+	langEmailFragment = &quot;Puedes cambiar tu contraseña accediendo a este enlace:&quot;;
+	langEmailLink = &quot;Cambiar mi contraseña&quot;;
+	langTo = &quot;usuario Quit&amp;Return&quot;;
+	langFrom = &quot;Quit&amp;Return&quot;;
+	langSubject=&quot;Solicitud de cambio de contraseña en Quit&amp;Return&quot;;
+	langInvalidError = &quot;Tu cliente de correo electrónico no es compatible con mensajes HTML&quot;;
+}
+
+var emBody = &apos;&lt;h1&gt;&apos; + langEmailTitle + &apos;&lt;/h1&gt;&lt;p&gt;&apos;+ langEmailFragment + 
+&apos; &lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://IntroduceYourServerIP:913/reset_password?username=&apos; + user + &apos;&amp;token=&apos; + tokenGenerated +&apos;&quot;&gt;&apos; + langEmailLink +&apos;&lt;/a&gt;&lt;/p&gt;&apos;;
+
+
+  // Create the email message
+  var email = new org.apache.commons.mail.HtmlEmail();
+email.setCharset(&quot;utf-8&quot;);
+email.setHostName(&quot;smtp.gmail.com&quot;);
+email.setSmtpPort(587);
+email.setAuthenticator(new org.apache.commons.mail.DefaultAuthenticator(&quot;pruebasfbtaiwan@gmail.com&quot;, &quot;sfb9739taiwan&quot;));
+email.setStartTLSRequired(true);
+
+
+  
+  email.addTo(user, langTo);
+  email.setFrom(&quot;pruebasfbtaiwan@gmail.com&quot;, langFrom);
+  email.setSubject(langSubject);
+
+  
+  // set the html message
+  email.setHtmlMsg(emBody);
+
+  // set the alternative message
+  email.setTextMsg(langInvalidError);
+  // send the email
+  response = email.send();
+
+channelMap.put(&apos;responseStatusCode&apos;, &apos;201&apos;);
+
+responseMap.put(&apos;response&apos;, response);
+return $r(&apos;response&apos;);</script>
+      </properties>
+      <transformer version="3.5.1">
+        <elements/>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>XML</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements/>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>XML</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+            <name>isResetPasswordRequestXML</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>var xmlContentRaw = connectorMessage.getRawData();
+var xmlContentWithReplaces = xmlContentRaw.replace(&apos;&amp;lt;&apos;, &apos;&lt;&apos;).replace(&apos;&amp;gt;&apos;, &apos;&gt;&apos;);
+
+return xmlContentWithReplaces.indexOf(&quot;&lt;GetLinkToChangePassword&gt;&quot;) !== -1;</script>
+          </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        </elements>
+      </filter>
+      <transportName>JavaScript Writer</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+    <connector version="3.5.1">
+      <metaDataId>7</metaDataId>
+      <name>sendConfirmRegistrationLink</name>
+      <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>false</queueEnabled>
+          <sendFirst>false</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>0</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>1</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <script>var username = channelMap.get(&quot;username&quot;);
+var lang = channelMap.get(&apos;language&apos;);
+responseMap.put(&apos;response&apos;, &quot;&quot;);
+
+var generatedToken = &apos;&apos;;
+var possible = &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789&quot;;
+
+dataBaseConnection = DatabaseConnectionFactory.createDatabaseConnection(&apos;org.postgresql.Driver&apos;,&apos;jdbc:postgresql://localhost:5432/NameOfDatabaseEstablished&apos;,&apos;introducedatabaseusername&apos;,&apos;introducepasswordfordatabaseuser&apos;);
+
+do{
+	for(var i=0; i &lt; 16; i++ )
+		generatedToken += possible.charAt(Math.floor(Math.random() * possible.length));
+	selectPossibleRepeatedTokenQuery = &quot;SELECT * FROM signuprequest WHERE generated_token = ? AND request_date &gt; CURRENT_TIMESTAMP - INTERVAL &apos;2 DAY&apos; &quot;;
+	possible_row = dataBaseConnection.executeCachedQuery(selectPossibleRepeatedTokenQuery, [generatedToken.toString()]);
+	token_is_repeated = possible_row.next();
+	
+}while(token_is_repeated);
+
+
+//TODO pending to debug
+
+setPreviousRequestInvalidQuery = &quot;UPDATE signuprequest SET is_valid = false,  reason_for_refused = &apos;OTHER_REQUEST_DONE&apos; WHERE is_valid AND used_username = ?&quot;;
+
+dataBaseConnection.executeUpdate(setPreviousRequestInvalidQuery, [username]);
+
+insertTokenRequestQuery = &quot;INSERT INTO signuprequest(used_username, is_valid, reason_for_refused, generated_token, confirmed, request_date) &quot; + 
+					&quot;VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)&quot;;
+
+dataBaseConnection.executeUpdate(insertTokenRequestQuery, [username, true, &quot;NOT_REFUSED&quot;, generatedToken.toString(), false])
+
+var langEmailTitle = &quot;Confirm registration&quot;;
+var langEmailFragment1 = &quot;Please access the link by selecting the Quit&amp;Return application to confirm the registration.&quot;;
+var langEmailFragment2 = &quot;If you prefer to register through a web link, you can do it clicking on this.&quot;;
+var langEmailLink1 = &quot;Confirm registration.&quot;;
+var langEmailLink2 = &quot;Confirm registration by web.&quot;;
+var langTo = &quot;Quit&amp;Return user.&quot;;
+var langFrom = &quot;Quit&amp;Return&quot;;
+var langSubject=&quot;Confirm registration on Quit&amp;Return.&quot;;
+var langInvalidError = &quot;Your email client does not support HTML messages.&quot;;
+
+logger.info(&quot;El idoma es:&quot; + lang);
+lang = lang.substring(0,2);
+logger.info(&quot;El idioma resumido es:&quot; + lang);
+if(lang == &quot;zh&quot;){
+	var langEmailTitle = &quot;確認註冊&quot;;
+	var langEmailFragment1 = &quot;請透過以下連結確認註冊有戒有還:&quot;;
+	var langEmailFragment2 = &quot;如果您希望透過超連結註冊，您可以點擊以下連結:&quot;;
+	var langEmailLink1 = &quot;確認註冊。&quot;;
+	var langEmailLink2 = &quot;透過超連結確認註冊。&quot;;
+	var langTo = &quot;有戒有還用戶。&quot;;
+	var langFrom = &quot;有戒有還。&quot;;
+	var langSubject=&quot;有戒有還註冊確認。&quot;;
+	var langInvalidError = &quot;您的電子信箱不支援HTML語法。&quot;;
+}else if(lang ==&quot;el&quot;){
+	var langEmailTitle = &quot;Επιβεβαίωσε την εγγραφή&quot;;
+	var langEmailFragment1 = &quot;Παρακαλώ, ακολούθησε τον σύνδεσμο επιλέγοντας την εφαρμογή SmokeFreeBrain για να επιβεβαιώσεις την εγγραφή:&quot;;
+	var langEmailFragment2 = &quot;Αν προτιμάς να εγγραφείς μέσω ενός συνδέσμου ιστού, μπορείς να το κάνεις κάνοντας κλικ σε αυτό:&quot;;
+	var langEmailLink1 = &quot;Επιβεβαίωσε την εγγραφή.&quot;;
+	var langEmailLink2 = &quot;Επιβεβαίωσε την εγγραφή μέσω ιστού.&quot;;
+	var langTo = &quot;Quit&amp;Return χρήστης&quot;;
+	var langFrom = &quot;Quit&amp;Return&quot;;
+	var langSubject=&quot;Αίτημα αλλαγής κωδικού πρόσβασης στο Quit&amp;Return&quot;;
+	var langInvalidError = &quot;η εφαρμογή του ηλεκτρονικού ταχυδρομείου σου δεν υποστηρίζει μηνύματα HTML&quot;;
+}else if(lang ==&quot;es&quot;){
+	var langEmailTitle = &quot;Confirmar registro&quot;;
+	var langEmailFragment1 = &quot;Por favor, accede al enlace y selecciona la aplicación Quit&amp;Return para confirmar el registro:&quot;;
+	var langEmailFragment2 = &quot;Si prefieres registrarte a través de un enlace web, puedes hacerlo haciendo clic en el siguiente enlace:&quot;;
+	var langEmailLink1 = &quot;Confirmar registro&quot;;
+	var langEmailLink2 = &quot;Confirmar registro por web&quot;;
+	var langTo = &quot;Usuario Quit&amp;Return&quot;;
+	var langFrom = &quot;Quit&amp;Return&quot;;
+	var langSubject=&quot;Confirmar el registro en Quit&amp;Return&quot;;
+	var langInvalidError = &quot;Tu cliente de correo electrónico no es compatible con mensajes HTML&quot;;
+}
+
+
+paramsToConfirmUser = &quot;&quot; + username + &quot;&amp;token=&quot; + generatedToken;
+
+
+var emBody = &apos;&lt;h1&gt;&apos;+ langEmailTitle +&apos;&lt;/h1&gt;&lt;p&gt;&apos; + langEmailFragment1 + 
+	&apos; &lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://salumedia.com/sfb/confirmregistration?username=&apos; + paramsToConfirmUser +&apos;&quot;&gt;&apos; + langEmailLink1 +&apos;&lt;/a&gt;&lt;/p&gt;&apos; + 
+	&apos;&lt;p&gt;&apos; + langEmailFragment2 + 
+	&apos; &lt;/p&gt;&lt;p&gt;&lt;a href=&quot;http://IntroduceYourServerIP:914/confirm_user_registration?username=&apos; + paramsToConfirmUser +&apos;&quot;&gt;&apos; + langEmailLink2 + &apos;&lt;/a&gt;&lt;/p&gt;&apos;;
+
+// Create the email message
+var email = new org.apache.commons.mail.HtmlEmail();
+
+email.setCharset(&quot;utf-8&quot;);
+email.setHostName(&quot;smtp.gmail.com&quot;);
+email.setSmtpPort(587);
+email.setAuthenticator(new org.apache.commons.mail.DefaultAuthenticator(&quot;pruebasfbtaiwan@gmail.com&quot;, &quot;sfb9739taiwan&quot;));
+email.setStartTLSRequired(true);
+
+
+  email.addTo(username, langTo);
+  email.setFrom(&quot;pruebasfbtaiwan@gmail.com&quot;, langFrom);
+  email.setSubject(langSubject);
+  
+  // set the html message
+  email.setHtmlMsg(emBody);
+
+  // set the alternative message
+  email.setTextMsg(langInvalidError);
+
+
+  // send the email
+response = email.send();
+
+channelMap.put(&apos;responseStatusCode&apos;, &apos;201&apos;);
+
+responseMap.put(&apos;response&apos;, response);
+return $r(&apos;response&apos;);</script>
+      </properties>
+      <transformer version="3.5.1">
+        <elements/>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>XML</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements/>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>XML</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements>
+          <com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+            <name>UserNotExists</name>
+            <sequenceNumber>0</sequenceNumber>
+            <script>var res = false;
+var dbConn;
+
+var reason_for_refused;
+
+try {
+	dbConn = DatabaseConnectionFactory.createDatabaseConnection(&apos;org.postgresql.Driver&apos;,&apos;jdbc:postgresql://localhost:5432/NameOfDatabaseEstablished&apos;,&apos;introducedatabaseusername&apos;,&apos;introducepasswordfordatabaseuser&apos;);
+
+	var terms_of_use_accepted = channelMap.get(&quot;termsofuseaccepted&quot;);
+	
+	var username = channelMap.get(&apos;username&apos;);
+	var selectUsersQuery = &quot;SELECT id FROM useraccount WHERE username = ?&quot;; 
+	var users = dbConn.executeCachedQuery(selectUsersQuery, [username]);
+
+if(terms_of_use_accepted !=&quot;t&quot;){
+	channelMap.put(&apos;responseStatusCode&apos;, &apos;405&apos;);
+	reason_for_refused = &quot;TERMS_NOT_ACCEPTED&quot;
+	
+}else if(users.size()&gt;0){
+	channelMap.put(&apos;responseStatusCode&apos;, &apos;409&apos;);
+	reason_for_refused = &quot;USER_EXISTS&quot;
+} else{
+	res = true;
+}
+
+if(!res){
+	
+	insertRefusedRequestQuery = &quot;INSERT INTO signuprequest(used_username, is_valid, reason_for_refused, generated_token, confirmed, request_date) &quot; + 
+							&quot;VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)&quot;;
+	dbConn.executeUpdate(insertRefusedRequestQuery, [username, false, reason_for_refused, &quot;NOT_GENERATED&quot;, false])
+}
+
+
+} finally {
+	if (dbConn) { 
+		dbConn.close();
+	}
+}
+
+return res;</script>
+          </com.mirth.connect.plugins.javascriptrule.JavaScriptRule>
+        </elements>
+      </filter>
+      <transportName>JavaScript Writer</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+  </destinationConnectors>
+  <preprocessingScript>// Modify the message variable below to pre process data
+return message;</preprocessingScript>
+  <postprocessingScript>// This script executes once after a message has been processed
+// Responses returned from here will be stored as &quot;Postprocessor&quot; in the response map
+return responseMap.get(&apos;response&apos;);</postprocessingScript>
+  <deployScript>// This script executes once when the channel is deployed
+// You only have access to the globalMap and globalChannelMap here to persist data
+return;</deployScript>
+  <undeployScript>// This script executes once when the channel is undeployed
+// You only have access to the globalMap and globalChannelMap here to persist data
+return;</undeployScript>
+  <properties version="3.5.1">
+    <clearGlobalChannelMap>true</clearGlobalChannelMap>
+    <messageStorageMode>DEVELOPMENT</messageStorageMode>
+    <encryptData>false</encryptData>
+    <removeContentOnCompletion>false</removeContentOnCompletion>
+    <removeOnlyFilteredOnCompletion>false</removeOnlyFilteredOnCompletion>
+    <removeAttachmentsOnCompletion>false</removeAttachmentsOnCompletion>
+    <initialState>STARTED</initialState>
+    <storeAttachments>false</storeAttachments>
+    <metaDataColumns>
+      <metaDataColumn>
+        <name>SOURCE</name>
+        <type>STRING</type>
+        <mappingName>mirth_source</mappingName>
+      </metaDataColumn>
+      <metaDataColumn>
+        <name>TYPE</name>
+        <type>STRING</type>
+        <mappingName>mirth_type</mappingName>
+      </metaDataColumn>
+    </metaDataColumns>
+    <attachmentProperties version="3.5.1">
+      <type>None</type>
+      <properties/>
+    </attachmentProperties>
+    <resourceIds class="linked-hash-map">
+      <entry>
+        <string>Default Resource</string>
+        <string>[Default Resource]</string>
+      </entry>
+    </resourceIds>
+  </properties>
+  <exportData>
+    <metadata>
+      <enabled>true</enabled>
+      <lastModified>
+        <time>1530023461316</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <pruningSettings>
+        <archiveEnabled>true</archiveEnabled>
+      </pruningSettings>
+    </metadata>
+    <codeTemplateLibraries>
+      <codeTemplateLibrary version="3.5.1">
+        <id>c7c71ab1-1149-4c16-acd7-8d431dae0a2e</id>
+        <name>CodeUtils</name>
+        <revision>3</revision>
+        <lastModified>
+          <time>1514138031853</time>
+          <timezone>Europe/Paris</timezone>
+        </lastModified>
+        <description></description>
+        <includeNewChannels>false</includeNewChannels>
+        <enabledChannelIds>
+          <string>9f98ae0f-5a61-43d4-8d82-7086e0c1d148</string>
+        </enabledChannelIds>
+        <disabledChannelIds>
+          <string>8e44daa0-2590-4b0a-9c08-194863cbc6ee</string>
+          <string>9d2c084d-bbd8-402c-a551-a2caa137b91e</string>
+          <string>278aafa7-fbd7-4053-a79f-f16078b7ef19</string>
+          <string>41e48daa-3fbb-4f26-b5ee-3a3793d9b2ba</string>
+          <string>e73dc40a-fc0f-460e-a9aa-aa1f830b16c1</string>
+          <string>c1bc5c3f-92f6-4d7f-9cc2-9886761bfae0</string>
+          <string>abd6b38a-c048-4c7e-a77f-d17ca13f024c</string>
+          <string>501fe75b-3421-4a86-9776-1971b3cf4b0b</string>
+          <string>4f212078-ec94-4006-b310-5253422f24d5</string>
+          <string>b7cfd2ba-f3cf-4b7d-a6cb-cbd2768893c2</string>
+          <string>fcee1912-fa5b-47fa-9da4-d6a2148c8e4c</string>
+          <string>6dcd6af9-7395-447e-b4d4-450752fe73a4</string>
+          <string>32c33267-b2b5-4dec-9f37-4e7ee3125dc6</string>
+          <string>792b1bc8-3942-4e57-a07c-3d4d5bdf2758</string>
+          <string>72b5a5ab-4725-4e7b-8f11-eebee8b07d38</string>
+          <string>77ee46e5-03d8-4eb8-8dec-00d62d9477d0</string>
+          <string>4567857e-e670-4ed9-8f7e-8f49f66ab106</string>
+          <string>d550e3d4-ef58-4338-aa64-d6797cc98b53</string>
+          <string>078681bf-9671-403e-b89b-daaee98a9a59</string>
+        </disabledChannelIds>
+        <codeTemplates>
+          <codeTemplate version="3.5.1">
+            <id>924c6b01-a3f9-4c07-a193-a78d9086133e</id>
+            <name>isAValidCode</name>
+            <revision>5</revision>
+            <lastModified>
+              <time>1510227457555</time>
+              <timezone>Europe/Paris</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>
+function isAValidCode(code, prefix){
+	
+	var haveValidLength = code.length == 5;
+
+	var haveValidPrefix = code.length &gt; 1 &amp;&amp; 
+					code.substring(0,2) == prefix;
+
+	var haveThreeValidNumbers = 
+						parseInt(code.substring(2,3)) &lt; 3 &amp;&amp;
+                              parseInt(code.substring(2,3)) &gt; 0 &amp;&amp;
+						parseInt(code.substring(3,4)) &lt; 10 &amp;&amp;
+                            	parseInt(code.substring(4,5)) &lt; 10 &amp;&amp;
+                              parseInt(code.substring(2,5)) &lt;= 250;
+
+	return haveValidLength &amp;&amp; haveValidPrefix &amp;&amp; haveThreeValidNumbers;
+}</code>
+            </properties>
+          </codeTemplate>
+        </codeTemplates>
+      </codeTemplateLibrary>
+    </codeTemplateLibraries>
+  </exportData>
+</channel>

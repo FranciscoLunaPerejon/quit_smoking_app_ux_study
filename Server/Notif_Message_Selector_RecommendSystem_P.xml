@@ -1,0 +1,1976 @@
+<channel version="3.5.1">
+  <id>e73dc40a-fc0f-460e-a9aa-aa1f830b16c1</id>
+  <nextMetaDataId>2</nextMetaDataId>
+  <name>Notif_Message_Selector_RecommendSystem_P</name>
+  <description></description>
+  <revision>7</revision>
+  <sourceConnector version="3.5.1">
+    <metaDataId>0</metaDataId>
+    <name>sourceConnector</name>
+    <properties class="com.mirth.connect.connectors.js.JavaScriptReceiverProperties" version="3.5.1">
+      <pluginProperties/>
+      <pollConnectorProperties version="3.5.1">
+        <pollingType>TIME</pollingType>
+        <pollOnStart>false</pollOnStart>
+        <pollingFrequency>5000</pollingFrequency>
+        <pollingHour>0</pollingHour>
+        <pollingMinute>2</pollingMinute>
+        <cronJobs/>
+        <pollConnectorPropertiesAdvanced>
+          <weekly>true</weekly>
+          <inactiveDays>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+          </inactiveDays>
+          <dayOfMonth>1</dayOfMonth>
+          <allDay>true</allDay>
+          <startingHour>8</startingHour>
+          <startingMinute>0</startingMinute>
+          <endingHour>17</endingHour>
+          <endingMinute>0</endingMinute>
+        </pollConnectorPropertiesAdvanced>
+      </pollConnectorProperties>
+      <sourceConnectorProperties version="3.5.1">
+        <responseVariable>None</responseVariable>
+        <respondAfterProcessing>true</respondAfterProcessing>
+        <processBatch>false</processBatch>
+        <firstResponse>false</firstResponse>
+        <processingThreads>1</processingThreads>
+        <resourceIds class="linked-hash-map">
+          <entry>
+            <string>Default Resource</string>
+            <string>[Default Resource]</string>
+          </entry>
+        </resourceIds>
+        <queueBufferSize>1000</queueBufferSize>
+      </sourceConnectorProperties>
+      <script>var dbConn;
+
+try {
+
+	var getDateStart = new Date();
+	
+	dbConn = DatabaseConnectionFactory.createDatabaseConnection(&apos;org.postgresql.Driver&apos;,&apos;jdbc:postgresql://localhost:5432/NameOfDatabaseEstablished&apos;,&apos;introducedatabaseusername&apos;,&apos;introducepasswordfordatabaseuser&apos;);
+	// RECOVER INFORMATION FOR HEALTH RECOMENDER SYSTEM 
+
+	var offSetSecondsInServerResult = dbConn.executeCachedQuery(&quot;SELECT EXTRACT(TIMEZONE FROM now());&quot;);
+	offSetSecondsInServerResult.next();
+	var offSetSecondsInServer = offSetSecondsInServerResult.getFloat(1);
+
+	
+	// All motivational messages
+	
+	var spanishMessagesResult = dbConn.executeCachedQuery(&quot;SELECT * FROM message WHERE message_type = 1 AND language_id = 2 ORDER BY id ASC;&quot;);
+	var englishMessagesResult = dbConn.executeCachedQuery(&quot;SELECT * FROM message WHERE message_type = 1 AND language_id = 3 ORDER BY id ASC;&quot;); 
+	var chineseMessagesResult = dbConn.executeCachedQuery(&quot;SELECT * FROM message WHERE message_type = 1 AND language_id = 4 ORDER BY id ASC;&quot;);
+	var greekMessagesResult = dbConn.executeCachedQuery(&quot;SELECT * FROM message WHERE message_type = 1 AND language_id = 10 ORDER BY id ASC;&quot;);
+	var arabianMessagesResult = dbConn.executeCachedQuery(&quot;SELECT * FROM message WHERE message_type = 1 AND language_id = 11 ORDER BY id ASC;&quot;);
+	// Generates metafature and messages votes array of users who have received messages and these have been rated
+
+	var userWithMessagesIds = dbConn.executeCachedQuery(&quot;SELECT user_id, message_id, vote FROM sentmessage WHERE received_date IS NOT NULL AND vote IS NOT NULL OR vote = 0 ORDER BY user_id ASC, message_id ASC, received_date ASC;&quot;);
+
+	var totalMessages = dbConn.executeCachedQuery(&quot;SELECT id FROM message WHERE message_type = 1 AND (language_id = 2 OR language_id = 3 OR language_id = 4 OR language_id = 10 OR language_id = 11) ORDER BY id ASC;&quot;); 
+
+	var smokeFreeCasualQuestionIdRow = dbConn.executeCachedQuery(&quot;SELECT id FROM message WHERE message_type = 2 AND message_content = &apos;SmokeFreeQuestion&apos;;&quot;);
+	smokeFreeCasualQuestionIdRow.next();
+	var smokeFreeCasualQuestionId = smokeFreeCasualQuestionIdRow.getInt(1);
+	var messagesFrequencyCasualQuestionIdRow = dbConn.executeCachedQuery(&quot;SELECT id FROM message WHERE message_type = 2 AND message_content = &apos;MessagesFrequencyQuestion&apos;;&quot;);
+	messagesFrequencyCasualQuestionIdRow.next();
+	var messagesFrequencyCasualQuestionId = messagesFrequencyCasualQuestionIdRow.getInt(1);
+	
+	var totalMessagesIds = [];
+	var totalMessagesDefaultValues = [];
+
+	// Get sorted message Ids
+	while(totalMessages.next()){
+		totalMessagesIds.push(totalMessages.getInt(1));
+		totalMessagesDefaultValues.push(3);
+	}
+
+	// Begin to create array
+
+	var arrayAppliedUserIds = [];
+	var matrixMetafeaturesEachUser = [[]];
+	var matrixMessagesRatingsEachUser = [[]];
+	var lastUserAppliedId = 0;
+	var userAppliedId;
+	while(userWithMessagesIds.next()){
+		
+		// Get last quitting period information from database
+
+		userAppliedId = userWithMessagesIds.getInt(1);
+		
+		if(userAppliedId != lastUserAppliedId){
+			
+			var userAppliedMetafeaturesResult = dbConn.executeCachedQuery(&quot;SELECT useraccount.id, username, roleuser.role_name,&quot; + // 1 - 3
+										&quot;nickname, gender, birth_date, employment_situation,&quot; + // 4-7
+										&quot;smokingdata.id, begin_smoking,&quot; + // 8-9
+										&quot;answer_question_1, answer_question_2, answer_question_3, answer_question_4, answer_question_5, answer_question_6, answer_question_7, answer_question_8, answer_question_9, &quot; + // 10-18
+										&quot;answer_question_10, answer_question_11, answer_question_12, answer_question_13, answer_question_14, answer_question_15, answer_question_16, answer_question_17, answer_question_18, answer_question_19,&quot; + // 19 - 28
+										&quot;answer_question_20, answer_question_21, answer_question_22, answer_question_23, answer_question_24, answer_question_25, answer_question_26, answer_question_27, answer_question_28, answer_question_29,&quot; + // 29 - 38
+										&quot;answer_question_30, answer_question_31, answer_question_32, answer_question_33, answer_question_34, answer_question_35, answer_question_36, answer_question_37, answer_question_38, answer_question_39,&quot; + // 39 - 48
+										&quot;answer_question_40, answer_question_41, answer_question_42, answer_question_43, answer_question_44, answer_question_45, answer_question_46, answer_question_47, answer_question_48, answer_question_49,&quot; + // 49 - 58
+										&quot;answer_question_50, answer_question_51, answer_question_52, answer_question_53&quot; +
+										&quot; FROM useraccount, user_role, roleuser, personaldata, smokingdata, extendedprofile&quot;+
+										&quot; WHERE useraccount.id = user_role.user_id AND roleuser.id = role_id AND roleuser.role_name = &apos;user&apos; AND useraccount.id = personaldata.user_id AND useraccount.id = smokingdata.user_id AND useraccount.id = extendedprofile.user_id&quot; +
+										&quot; AND useraccount.id = ?&quot;, [userAppliedId]); // Consider change &apos;user&apos; for &apos;test&apos; in this query for test purposes
+			
+			if(userAppliedMetafeaturesResult.next()){
+				
+				var smokingDataId = userAppliedMetafeaturesResult.getInt(8);
+				
+				var lastQuittingPeriodUserResult = dbConn.executeCachedQuery(&quot;SELECT start_date, weekly_expenditure, currency, daily_cigarettes,&quot; + // 1 - 4
+					&quot;motivationtest.test_result, adictiontest.test_result&quot; + // 5 - 6
+					&quot; FROM quittingperiod &quot; + &quot;INNER JOIN previoussmokinghabits ON quittingperiod.id = previoussmokinghabits.quittingperiod_id&quot; +
+					&quot; INNER JOIN motivationtest ON quittingperiod.id = motivationtest.quittingperiod_id&quot; + 
+					&quot; INNER JOIN adictiontest ON quittingperiod.id = adictiontest.quittingperiod_id WHERE smokingdata_id = ?::INTEGER&quot; + 
+					&quot; ORDER BY register_date DESC,quittingperiod.id DESC&quot;, [smokingDataId]);
+
+				lastQuittingPeriodUserResult.next();
+
+				// Get all needed user attributes for the user metafeatures array creation
+
+				var gender = userAppliedMetafeaturesResult.getString(5);
+				var birthDate = userAppliedMetafeaturesResult.getString(6);
+				var employment = userAppliedMetafeaturesResult.getString(7);
+				var startSmokingDate = userAppliedMetafeaturesResult.getString(9);
+				var quittingDate = lastQuittingPeriodUserResult.getString(1);
+				var richmondTestResult = lastQuittingPeriodUserResult.getString(5);
+				var fagerstromTestResult = lastQuittingPeriodUserResult.getString(6);
+				var dailyCigarettes = lastQuittingPeriodUserResult.getFloat(4);
+				var weeklyTobacoExpenditure = lastQuittingPeriodUserResult.getFloat(2);
+				var currency = lastQuittingPeriodUserResult.getString(3); 
+				var extendedProfileQuestions;
+
+				var aMetafeature = userAppliedMetafeaturesResult.getString(10); 
+		
+		
+				if(aMetafeature){ // A metafeature. If is null, the user never fill any part of the extended profile form, that is, all others metafeatures are null too
+					extendedProfileQuestions = [&quot;&quot; + userAppliedMetafeaturesResult.getString(10), &quot;&quot; + userAppliedMetafeaturesResult.getString(11), &quot;&quot; + userAppliedMetafeaturesResult.getString(12), &quot;&quot; + userAppliedMetafeaturesResult.getString(13), &quot;&quot; + userAppliedMetafeaturesResult.getString(14), 
+									&quot;&quot; + userAppliedMetafeaturesResult.getString(15), &quot;&quot; + userAppliedMetafeaturesResult.getString(16), &quot;&quot; + userAppliedMetafeaturesResult.getString(17), &quot;&quot; + userAppliedMetafeaturesResult.getString(18), &quot;&quot; + userAppliedMetafeaturesResult.getString(19), 
+									&quot;&quot; + userAppliedMetafeaturesResult.getString(20), &quot;&quot; + userAppliedMetafeaturesResult.getString(21), &quot;&quot; + userAppliedMetafeaturesResult.getString(22), &quot;&quot; + userAppliedMetafeaturesResult.getString(23), &quot;&quot; + userAppliedMetafeaturesResult.getString(24), 
+									&quot;&quot; + userAppliedMetafeaturesResult.getString(25), &quot;&quot; + userAppliedMetafeaturesResult.getString(26), &quot;&quot; + userAppliedMetafeaturesResult.getString(27), &quot;&quot; + userAppliedMetafeaturesResult.getString(28), &quot;&quot; + userAppliedMetafeaturesResult.getString(29), 
+									&quot;&quot; + userAppliedMetafeaturesResult.getString(30), &quot;&quot; + userAppliedMetafeaturesResult.getString(31), &quot;&quot; + userAppliedMetafeaturesResult.getString(32), &quot;&quot; + userAppliedMetafeaturesResult.getString(33), &quot;&quot; + userAppliedMetafeaturesResult.getString(34), 
+									&quot;&quot; + userAppliedMetafeaturesResult.getString(35), &quot;&quot; + userAppliedMetafeaturesResult.getString(36), &quot;&quot; + userAppliedMetafeaturesResult.getString(37), &quot;&quot; + userAppliedMetafeaturesResult.getString(38), &quot;&quot; + userAppliedMetafeaturesResult.getString(39), 
+									&quot;&quot; + userAppliedMetafeaturesResult.getString(40), &quot;&quot; + userAppliedMetafeaturesResult.getString(41), &quot;&quot; + userAppliedMetafeaturesResult.getString(42), &quot;&quot; + userAppliedMetafeaturesResult.getString(43), &quot;&quot; + userAppliedMetafeaturesResult.getString(44), 
+									&quot;&quot; + userAppliedMetafeaturesResult.getString(45), &quot;&quot; + userAppliedMetafeaturesResult.getString(46), &quot;&quot; + userAppliedMetafeaturesResult.getString(47), &quot;&quot; + userAppliedMetafeaturesResult.getString(48), &quot;&quot; + userAppliedMetafeaturesResult.getString(49), 
+									&quot;&quot; + userAppliedMetafeaturesResult.getString(50), &quot;&quot; + userAppliedMetafeaturesResult.getString(51), &quot;&quot; + userAppliedMetafeaturesResult.getString(52), &quot;&quot; + userAppliedMetafeaturesResult.getString(53), &quot;&quot; + userAppliedMetafeaturesResult.getString(54), 
+									&quot;&quot; + userAppliedMetafeaturesResult.getString(55), &quot;&quot; + userAppliedMetafeaturesResult.getString(56), &quot;&quot; + userAppliedMetafeaturesResult.getString(57), &quot;&quot; + userAppliedMetafeaturesResult.getString(58), &quot;&quot; + userAppliedMetafeaturesResult.getString(59), 
+									&quot;&quot; + userAppliedMetafeaturesResult.getString(60), &quot;&quot; + userAppliedMetafeaturesResult.getString(61), &quot;&quot; + userAppliedMetafeaturesResult.getString(62)];
+									
+				}
+				else{
+					extendedProfileQuestions = [&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,
+								   &quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;];
+				}
+
+				
+				// User metafeature array generation
+
+				var genderUserMetafeature = gender == &quot;f&quot; ? &quot;01&quot; : &quot;10&quot;;
+				var ageUserMetafeature = generateAgeUserMetafeature(timeSinceDate(birthDate)); //TODO
+				//logger.info(&quot;ageUserMetafeature para birthDate &quot; + birthDate + &quot;: &quot; + ageUserMetafeature)
+				var employmentUserMetafeature = employment == &quot;employed&quot; ? &quot;10&quot; : &quot;01&quot;;
+				var yearsStartSmokingUserMetafeature = generateYearsStartSmokingUserMetafeature(timeSinceDate(startSmokingDate)); //TODO
+				// logger.info(&quot;years para startSmokingDate &quot; + startSmokingDate + &quot;: &quot; + timeSinceDate(startSmokingDate) + &quot;y metafeature: &quot; + yearsStartSmokingUserMetafeature);
+				var timeStartQuittingAttemptUserMetafeature = generateQuittingAttemptTimeUserMetafeature(timeSinceDate(quittingDate)); //TODO
+				// logger.info(&quot;time para quittingDate &quot; + quittingDate + &quot;: &quot; + timeSinceDate(quittingDate) + &quot;y metafeature: &quot; + timeStartQuittingAttemptUserMetafeature)
+				var richmondTestResultUserMetafeature = generateRichmondTestResultUserMetafeature(richmondTestResult); //TODO
+				//logger.info(&quot;richmondTestResultUserMetafeature para richmondTestResult &quot; + richmondTestResult + &quot;: &quot; + richmondTestResultUserMetafeature)
+				var fagerstromTestResultUserMetafeature = &quot;1&quot;; // Because this metafeature isn&apos;t used with the messages
+				var cigarettesConsumptionUserMetafeature = generateCigarettesConsumptionUserMetafeature(dailyCigarettes); //TODO
+				//logger.info(&quot;cigarettesConsumptionUserMetafeature para dailyCigarettes &quot; + dailyCigarettes + &quot;: &quot; + cigarettesConsumptionUserMetafeature)
+				var spentMoneyUserMetafeature = generateSpentMoneyUserMetafeature(weeklyTobacoExpenditure, currency); //TODO
+				//logger.info(&quot;spentMoneyUserMetafeature para weeklyTobacoExpenditure &quot; + weeklyTobacoExpenditure + &quot; y currency &quot; + currency +&quot;: &quot; + spentMoneyUserMetafeature)
+
+				var userMetafeatures = [genderUserMetafeature, ageUserMetafeature, employmentUserMetafeature, yearsStartSmokingUserMetafeature, 
+							timeStartQuittingAttemptUserMetafeature, richmondTestResultUserMetafeature, fagerstromTestResultUserMetafeature, 
+							cigarettesConsumptionUserMetafeature, spentMoneyUserMetafeature].concat(extendedProfileQuestions);
+				
+				arrayAppliedUserIds.push(userAppliedId);
+				matrixMetafeaturesEachUser.push(userMetafeatures.slice());
+				matrixMessagesRatingsEachUser.push(totalMessagesDefaultValues.slice());
+
+				lastUserAppliedId = userAppliedId;
+			}
+			else{
+				continue;
+			}
+			
+		}
+		indexMessageId = totalMessagesIds.indexOf(userWithMessagesIds.getInt(2));
+		messageratingForThisUser = userWithMessagesIds.getInt(3);
+		//logger.info(&quot;Se encuentra que el mensaje con id: &quot; + userWithMessagesIds.getInt(2) + &quot; esta valorado por el user con id: &quot; + userAppliedId + &quot; con una valoracion de: &quot; + messageratingForThisUser);
+		matrixMessagesRatingsEachUser[matrixMessagesRatingsEachUser.length-1][indexMessageId] = messageratingForThisUser;
+	}
+	matrixMetafeaturesEachUser.shift();
+	matrixMessagesRatingsEachUser.shift();
+
+	
+	// Debug purpose
+	/*
+	logger.info(&quot;Matriz de votos : [&quot;)
+	for(var i = 0 ; i&lt; matrixMessagesRatingsEachUser.length ; i++ ){
+		logger.info(&quot;[&quot; + matrixMessagesRatingsEachUser[i] +&quot;],&quot;);
+	}*/
+	
+	//logger.info(&quot;Los tamanios son: &quot; + matrixMetafeaturesEachUser.length + &quot;y &quot; + matrixMessagesRatingsEachUser.length )
+
+
+
+
+	
+	// BEGIN HEALTH RECOMMENDER SYSTEM 
+	/*
+		1.  Calculate user-i (users in quitting attempt stablished) metafeatures
+		2. Calculate number of messages to sent -&gt; nMessages
+		3. For (j = 0 -&gt; nMessages)
+			3.I. Calculate context metafeatures (weekday and time)
+			3.II. (first step HRS) Compare each message-metafeatures (previously filtered for language) with (user + context)-metafeatures and filter these that not match -&gt; filteredMessages
+			3.III. See group of patient:
+				3.III.A. Case Control-Group(&quot;B&quot;): random selection of message, the least sent to user-i;
+				3.III.B. Case Intervention-Group(&quot;A&quot;): second step HRS
+						3.III.B.i Calculate match metafeatures punctuation user-i with all users with sent messages -&gt; p = [p(u-i,u-1), ... , p(u-i,u-j), ... , p(u-i,u-m)]
+						3.III.B.ii. Calculate each message-k punctuation to user-i using  p with user ratings -&gt; r(m-k):
+										r(m-k) = [r(m-k,u-1)*p(u-i,u-1) + ... + r(m-k,u-j)*p(u-i,u-j) + ... + r(m-k,u-m)*p(u-i,u-m)]/(totalUsers*maxMessageRating); with maxMessageRating = 5
+						3.III.B.iii. selection of the least sent message with best punctuation to user-i;
+									
+	*/
+	
+	// Variables for each user
+
+	
+	var userResult = dbConn.executeCachedQuery(&quot;SELECT useraccount.id, time_zone, clinical_group,&quot; + //1-3
+	          &quot;nickname, gender, birth_date, employment_situation,&quot; + // 4-7
+			&quot;smokingdata.id, begin_smoking,&quot; + // 8-9
+			&quot;answer_question_1, answer_question_2, answer_question_3, answer_question_4, answer_question_5, answer_question_6, answer_question_7, answer_question_8, answer_question_9, &quot; + // 10-18
+			&quot;answer_question_10, answer_question_11, answer_question_12, answer_question_13, answer_question_14, answer_question_15, answer_question_16, answer_question_17, answer_question_18, answer_question_19,&quot; + // 19 - 28
+			&quot;answer_question_20, answer_question_21, answer_question_22, answer_question_23, answer_question_24, answer_question_25, answer_question_26, answer_question_27, answer_question_28, answer_question_29,&quot; + // 29 - 38
+			&quot;answer_question_30, answer_question_31, answer_question_32, answer_question_33, answer_question_34, answer_question_35, answer_question_36, answer_question_37, answer_question_38, answer_question_39,&quot; + // 39 - 48
+			&quot;answer_question_40, answer_question_41, answer_question_42, answer_question_43, answer_question_44, answer_question_45, answer_question_46, answer_question_47, answer_question_48, answer_question_49,&quot; + // 49 - 58
+			&quot;answer_question_50, answer_question_51, answer_question_52, answer_question_53,&quot; + // 59 - 62
+			&quot;language_id,&quot; + // 63
+			&quot;send_on_monday, send_on_tuesday, send_on_wednesday, send_on_thursday, send_on_friday, send_on_saturday, send_on_sunday,&quot; + // 64 - 70
+			&quot;init_monday, init_tuesday, init_wednesday, init_thursday, init_friday, init_saturday, init_sunday,&quot; + // 71 -77
+			&quot;end_monday, end_tuesday, end_wednesday, end_thursday, end_friday, end_saturday, end_sunday,&quot; + // 78 - 84
+			&quot;date_not_disturb, option_not_disturb &quot; + // 94 - 95
+			&quot;FROM useraccount,personaldata,smokingdata,extendedprofile,userpreferences &quot; +  
+			&quot;WHERE useraccount.id = personaldata.user_id AND useraccount.id = smokingdata.user_id AND useraccount.id = extendedprofile.user_id AND useraccount.id = userpreferences.user_id &quot; +
+			&quot;AND is_in_quitting_period ORDER BY useraccount.id ASC;&quot;);
+
+	
+	// logger.info(&quot; Basic test result of matchMetafeature function: &quot; + match_metafeatures([&quot;1&quot;, &quot;1010&quot;, &quot;1&quot;, &quot;1100&quot;], [&quot;0&quot;, &quot;0&quot;, &quot;1&quot;, &quot;0011&quot;]));
+	
+
+	//For each one of the users that are in a quitting attempt
+	// logger.info(&quot;Cantidad de ususarios en quit attempt: &quot; + userResult.size());
+	while(userResult.next()){
+		var userId = userResult.getInt(1);
+
+		// logger.info(&quot;Para usuario con id: &quot; + userId);
+		var currentDate = new Date();
+		
+		selectedMessagesListForThisUser = [];
+		
+		var weekDay = currentDate.getDay();
+		
+		var isAValidWeekDayForUserArray = [userResult.getBoolean(70), userResult.getBoolean(64), userResult.getBoolean(65), userResult.getBoolean(66), userResult.getBoolean(67), userResult.getBoolean(68), 
+									userResult.getBoolean(69)]; //Sunday the first, next in order
+									
+		//logger.info(&quot;Array de días validos: &quot; + isAValidWeekDayForUserArray);
+		
+		if(!isAValidWeekDayForUserArray[weekDay]){ // Don&apos;t send messages today if the user doesn&apos;t allow it
+			continue; 
+		}
+
+		// Context dependent attributes
+		
+		var startWeekDayHourIntervalArray = [userResult.getString(77), userResult.getString(71), userResult.getString(72), userResult.getString(73), userResult.getString(74), userResult.getString(75), 
+									userResult.getString(76)]; //Sunday the first, next in order
+									
+		var endWeekDayHourIntervalArray = [userResult.getString(84), userResult.getString(78), userResult.getString(79), userResult.getString(80), userResult.getString(81), userResult.getString(82), 
+									userResult.getString(83)]; //Sunday the first, next in order
+		
+		//logger.info(&quot;Hour interval example: &quot; + startWeekDayHourIntervalArray[weekDay] + &quot;  --  &quot; + endWeekDayHourIntervalArray[weekDay]);
+
+		
+		// For getRandomTimeInInterval function test purpose
+		// var sentMessageTime = getRandomTimeInInterval(&quot;12:00:00&quot;, &quot;15:00:00&quot;); 
+		/*var sentMessageTime = getRandomTimeInInterval(getRandomTimeInInterval(&quot;23:49:00&quot;, &quot;00:13:00&quot;),
+													getRandomTimeInInterval(startWeekDayHourIntervalArray[weekDay], endWeekDayHourIntervalArray[weekDay]));
+													*/
+
+		// Get last quitting period information from database
+		
+		var smokingDataId = userResult.getInt(8);
+		
+		var lastQuittingPeriodUserResult = dbConn.executeCachedQuery(&quot;SELECT start_date, weekly_expenditure, currency, daily_cigarettes,&quot; + // 1 - 4
+				&quot;motivationtest.test_result, adictiontest.test_result,&quot; + // 5 - 6
+				&quot;register_date &quot;+ // 7
+				&quot; FROM quittingperiod &quot; + &quot;INNER JOIN previoussmokinghabits ON quittingperiod.id = previoussmokinghabits.quittingperiod_id&quot; +
+				&quot; INNER JOIN motivationtest ON quittingperiod.id = motivationtest.quittingperiod_id&quot; + 
+				&quot; INNER JOIN adictiontest ON quittingperiod.id = adictiontest.quittingperiod_id WHERE smokingdata_id = ?::INTEGER&quot; + 
+				&quot; ORDER BY register_date DESC,quittingperiod.id DESC&quot;, [smokingDataId]);
+
+		lastQuittingPeriodUserResult.next();
+
+		//Number of messages to send
+
+		var numberOfMessagesToSend = 0;
+		//logger.info(&quot;El ususario con id:  &quot; + userId + &quot; establecio su ultimo quitting date con fecha de comienzo: &quot; +  lastQuittingPeriodUserResult.getString(1));
+		var quittingTimeInSeconds = timeSinceDate(lastQuittingPeriodUserResult.getString(1));
+
+		var userTimeZone = userResult.getString(2);
+		
+		//Number of messages to send
+
+		var numberOfMessagesToSend = 0;
+		//logger.info(&quot;El ususario con id:  &quot; + userId + &quot; establecio su ultimo quitting date con fecha de comienzo: &quot; +  lastQuittingPeriodUserResult.getString(1));
+		var quittingTimeInSeconds = timeSinceDate(lastQuittingPeriodUserResult.getString(1));
+		
+		
+		var javaTimeZone = java.util.TimeZone.getTimeZone(userTimeZone);
+		var offSetOfUserTimeZoneInSeconds = javaTimeZone.getOffset(new Date().getTime()) / 1000;
+
+		var offsetCorrection = parseInt((/*offSetSecondsInServer */- offSetOfUserTimeZoneInSeconds), 10);
+
+		daysInQuittingAttempt = (quittingTimeInSeconds - offsetCorrection - 5*60 /* 5 minutes */ )/(3600*24);
+		
+		if(daysInQuittingAttempt &lt; 0){
+			numberOfMessagesToSend = 1;
+			//logger.info(&quot;El uusario con id: &quot; + userId + &quot; ha establecido su quit attempt pero aun falta&quot;);
+		}else if(daysInQuittingAttempt &lt;1){
+			//logger.info(&quot;El uusario con id: &quot; + userId + &quot; lleva menos de un dia en quit attempt&quot;);
+			numberOfMessagesToSend = 4;
+			
+		}else if(daysInQuittingAttempt &lt; 8){
+			numberOfMessagesToSend = 1;
+			//logger.info(&quot;El usuario con id: &quot; + userId + &quot; lleva entre un dia y siete en quit attempt&quot;);
+			
+		}else{
+			// logger.info(&quot;El usuario con id: &quot; + userId + &quot; lleva mas de siete dias  en quit attempt&quot;);
+			var haveToSendMessagesPerWeek = false;
+			var messagesPerWeek = 0;
+			
+			var lastMessageFrequencyPreferenceResult = dbConn.executeCachedQuery(
+				&quot;SELECT vote FROM sentmessage WHERE received_date IS NOT NULL AND (vote IS NOT NULL OR vote = 0) AND user_id = ? AND message_id =  ? ORDER BY received_date DESC;&quot;, 
+				[userId, messagesFrequencyCasualQuestionId]);
+				
+			if(!lastMessageFrequencyPreferenceResult.next()){
+				//logger.info(&quot;El usuario con id: &quot; + userId + &quot; nunca ha contestado una pregunta de preferencias. Se le mandan tres mensajes a la semana&quot;);
+				haveToSendMessagesPerWeek = true;
+				messagesPerWeek = 3;
+			}else{
+				var lastMessageFrequencyPreference = lastMessageFrequencyPreferenceResult.getInt(1);
+				if(lastMessageFrequencyPreference == 2){
+					//logger.info(&quot;El usuario con id: &quot; + userId + &quot; ha contestado por ultima vez que quiere un mensaje diario&quot;);
+					numberOfMessagesToSend = 1;
+				}else if(lastMessageFrequencyPreference == 1){
+					//logger.info(&quot;El usuario con id: &quot; + userId + &quot; ha contestado por ultima vez que quiere tres mensajes a la semana&quot;);
+					haveToSendMessagesPerWeek = true;
+					messagesPerWeek = 3;
+				}else{
+					//logger.info(&quot;El usuario con id: &quot; + userId + &quot; ha contestado por ultima vez que quiere 1 mensaje a la semana&quot;);
+					haveToSendMessagesPerWeek = true;
+					messagesPerWeek = 1;
+				}
+			}
+				
+			if(haveToSendMessagesPerWeek){
+				var dateMonday = getMondayFormatDate(currentDate);
+				// logger.info(&quot;Fecha del lunes a las doce: &quot; + dateMonday);
+				var numberOfMessagesReceivedSinceMondayRow =  dbConn.executeCachedQuery(
+						&quot;SELECT * FROM sentmessage WHERE received_date IS NOT NULL AND user_id = ? AND sent_date &gt;= &apos;&quot; + dateMonday + &quot;&apos; AND message_id != &quot; + smokeFreeCasualQuestionId + &quot; AND message_id != &quot; + messagesFrequencyCasualQuestionId + &quot;;&quot;, 
+						[userId]);
+						
+				var numberOfMessagesReceivedSinceMonday = numberOfMessagesReceivedSinceMondayRow.size();
+				// logger.info(&quot;Al ususario con id: &quot; + userId + &quot; se le ha mandado &quot; + numberOfMessagesReceivedSinceMonday + &quot; mensajes esta semana&quot;);
+				if(numberOfMessagesReceivedSinceMonday &lt;= messagesPerWeek){
+					// logger.info(&quot;Al ususario con id: &quot; + userId + &quot; le quedan &quot; + (messagesPerWeek - numberOfMessagesReceivedSinceMonday) + &quot; mensajes por recibir esta semana&quot;);
+					numberOfMessagesToSend = 1;
+				}else{
+					// logger.info(&quot;El ususario con id &quot; + userId + &quot;Ya ha recibido todos los mensajes para esta semana&quot;)
+					continue;
+				}
+			}
+		}
+									
+
+		// Get all needed user attributes for the user metafeatures array creation
+
+		var gender = userResult.getString(5);
+		var birthDate = userResult.getString(6);
+		var employment = userResult.getString(7);
+		var startSmokingDate = userResult.getString(9);
+		var quittingDate = lastQuittingPeriodUserResult.getString(1);
+		var richmondTestResult = lastQuittingPeriodUserResult.getString(5);
+		var fagerstromTestResult = lastQuittingPeriodUserResult.getString(6);
+		var dailyCigarettes = lastQuittingPeriodUserResult.getFloat(4);
+		var weeklyTobacoExpenditure = lastQuittingPeriodUserResult.getFloat(2);
+		var currency = lastQuittingPeriodUserResult.getString(3); 
+		var extendedProfileQuestions;
+
+		var aMetafeature = userResult.getString(10); 
+		
+		
+		if(aMetafeature){ // A metafeature. If is null, the user never fill any part of the extended profile form, that is, all others metafeatures are null too
+			extendedProfileQuestions = [&quot;&quot; + userResult.getString(10), &quot;&quot; + userResult.getString(11), &quot;&quot; + userResult.getString(12), &quot;&quot; + userResult.getString(13), &quot;&quot; + userResult.getString(14), 
+									&quot;&quot; + userResult.getString(15), &quot;&quot; + userResult.getString(16), &quot;&quot; + userResult.getString(17), &quot;&quot; + userResult.getString(18), &quot;&quot; + userResult.getString(19), 
+									&quot;&quot; + userResult.getString(20), &quot;&quot; + userResult.getString(21), &quot;&quot; + userResult.getString(22), &quot;&quot; + userResult.getString(23), &quot;&quot; + userResult.getString(24), 
+									&quot;&quot; + userResult.getString(25), &quot;&quot; + userResult.getString(26), &quot;&quot; + userResult.getString(27), &quot;&quot; + userResult.getString(28), &quot;&quot; + userResult.getString(29), 
+									&quot;&quot; + userResult.getString(30), &quot;&quot; + userResult.getString(31), &quot;&quot; + userResult.getString(32), &quot;&quot; + userResult.getString(33), &quot;&quot; + userResult.getString(34), 
+									&quot;&quot; + userResult.getString(35), &quot;&quot; + userResult.getString(36), &quot;&quot; + userResult.getString(37), &quot;&quot; + userResult.getString(38), &quot;&quot; + userResult.getString(39), 
+									&quot;&quot; + userResult.getString(40), &quot;&quot; + userResult.getString(41), &quot;&quot; + userResult.getString(42), &quot;&quot; + userResult.getString(43), &quot;&quot; + userResult.getString(44), 
+									&quot;&quot; + userResult.getString(45), &quot;&quot; + userResult.getString(46), &quot;&quot; + userResult.getString(47), &quot;&quot; + userResult.getString(48), &quot;&quot; + userResult.getString(49), 
+									&quot;&quot; + userResult.getString(50), &quot;&quot; + userResult.getString(51), &quot;&quot; + userResult.getString(52), &quot;&quot; + userResult.getString(53), &quot;&quot; + userResult.getString(54), 
+									&quot;&quot; + userResult.getString(55), &quot;&quot; + userResult.getString(56), &quot;&quot; + userResult.getString(57), &quot;&quot; + userResult.getString(58), &quot;&quot; + userResult.getString(59), 
+									&quot;&quot; + userResult.getString(60), &quot;&quot; + userResult.getString(61), &quot;&quot; + userResult.getString(62)];
+									
+		}
+		else{
+			extendedProfileQuestions = [&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,
+								   &quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;,&quot;0&quot;];
+		}
+
+		
+		// User metafeature array generation
+
+		var genderUserMetafeature = gender == &quot;f&quot; ? &quot;01&quot; : &quot;10&quot;;
+		var ageUserMetafeature = generateAgeUserMetafeature(timeSinceDate(birthDate)); //TODO
+		//logger.info(&quot;ageUserMetafeature para birthDate &quot; + birthDate + &quot;: &quot; + ageUserMetafeature)
+		var employmentUserMetafeature = employment == &quot;employed&quot; ? &quot;10&quot; : &quot;01&quot;;
+		var yearsStartSmokingUserMetafeature = generateYearsStartSmokingUserMetafeature(timeSinceDate(startSmokingDate)); //TODO
+		//logger.info(&quot;years para startSmokingDate &quot; + startSmokingDate + &quot;: &quot; + timeSinceDate(startSmokingDate) + &quot;y metafeature: &quot; + yearsStartSmokingUserMetafeature);
+		var timeStartQuittingAttemptUserMetafeature = generateQuittingAttemptTimeUserMetafeature(timeSinceDate(quittingDate)); //TODO
+		//logger.info(&quot;time para quittingDate &quot; + quittingDate + &quot;: &quot; + timeSinceDate(quittingDate) + &quot;y metafeature: &quot; + timeStartQuittingAttemptUserMetafeature)
+		var richmondTestResultUserMetafeature = generateRichmondTestResultUserMetafeature(richmondTestResult); //TODO
+		//logger.info(&quot;richmondTestResultUserMetafeature para richmondTestResult &quot; + richmondTestResult + &quot;: &quot; + richmondTestResultUserMetafeature)
+		var fagerstromTestResultUserMetafeature = generateRichmondTestResultUserMetafeature(fagerstromTestResult);
+		var cigarettesConsumptionUserMetafeature = generateCigarettesConsumptionUserMetafeature(dailyCigarettes); //TODO
+		//logger.info(&quot;cigarettesConsumptionUserMetafeature para dailyCigarettes &quot; + dailyCigarettes + &quot;: &quot; + cigarettesConsumptionUserMetafeature)
+		var spentMoneyUserMetafeature = generateSpentMoneyUserMetafeature(weeklyTobacoExpenditure, currency); //TODO
+		//logger.info(&quot;spentMoneyUserMetafeature para weeklyTobacoExpenditure &quot; + weeklyTobacoExpenditure + &quot; y currency &quot; + currency +&quot;: &quot; + spentMoneyUserMetafeature)
+
+		var userMetafeatures = [genderUserMetafeature, ageUserMetafeature, yearsStartSmokingUserMetafeature, 
+							timeStartQuittingAttemptUserMetafeature, richmondTestResultUserMetafeature, fagerstromTestResultUserMetafeature,
+							employmentUserMetafeature, 
+							cigarettesConsumptionUserMetafeature, spentMoneyUserMetafeature].concat(extendedProfileQuestions);
+		
+		// Messages subset selection by language
+
+		var messages;
+		
+		var userLanguageId = userResult.getString(63);
+		if(userLanguageId == 4){
+			messages = chineseMessagesResult.createCopy(); 
+		}else if(userLanguageId == 2){
+			messages = spanishMessagesResult.createCopy(); 
+		}else if(userLanguageId == 10){
+			messages = greekMessagesResult.createCopy(); 
+		}else if(userLanguageId == 11){
+			messages = arabianMessagesResult.createCopy();
+		}else{
+			messages = englishMessagesResult.createCopy();
+		}
+
+	var messageIdsSelected = [];
+
+	var parsedTotalDate = []
+	
+	
+	// logger.info(&quot;Numero de mensajes a enviar al usuario con id: &quot; + userId + &quot; --&gt; &quot; + numberOfMessagesToSend);
+	for(var m = 1 ; m &lt;= numberOfMessagesToSend ; m++){
+
+		// logger.info(&quot;iteracion &quot; + m  + &quot;del ususario &quot; + userId); 
+		
+		// Context metafeatures
+
+		var sentMessageTime = getRandomTimeInInterval(startWeekDayHourIntervalArray[weekDay], endWeekDayHourIntervalArray[weekDay]);
+		
+		// Test purpose
+		/*
+		var d = new Date,
+    			dformat = 
+              [d.getHours() &lt; 10 ? &quot;0&quot; + d.getHours() : d.getHours(),
+               d.getMinutes() &lt; 10 ? &quot;0&quot; + d.getMinutes() : d.getMinutes(),
+               d.getSeconds() &lt; 10 ? &quot;0&quot; + d.getSeconds() : d.getSeconds()].join(&apos;:&apos;);
+          var d2 = new Date, 
+          	lessTenMinutes = d2.getHours() == 23 &amp;&amp; d2.getMinutes() &gt; 50
+         		d2format = 
+              [lessTenMinutes ? 23 : ((d2.getHours() + ((d2.getMinutes() + 10) &gt; 60 ? 1 : 0)) &lt; 10 ? &quot;0&quot; + (d2.getHours() + ((d2.getMinutes() + 10) &gt; 60 ? 1 : 0)) : (d2.getHours() + ((d2.getMinutes() + 10) &gt; 60 ? 1 : 0))),
+               lessTenMinutes ? 59 : (((d2.getMinutes() + 10) % 60) &lt; 10 ? &quot;0&quot; + ((d2.getMinutes() + 10) % 60) : ((d2.getMinutes() + 10) % 60)),
+               lessTenMinutes ? 59 : ((d2.getSeconds()  &lt; 10 ? &quot;0&quot; + d2.getSeconds() : d2.getSeconds()))].join(&apos;:&apos;);
+               
+		//logger.info(dformat)
+		//logger.info(d2format)
+		var sentMessageTime = getRandomTimeInInterval(dformat, d2format);
+		*/
+		
+		
+		if(sentMessageTime == &quot;&quot;){ // It doesn&apos;t exists a valid time
+			continue;
+		}
+		// logger.info(&quot;Time: &quot; + sentMessageTime)
+		var sentMessageTimeWithCorrectOffset = timeOffSetConversion(sentMessageTime, offSetSecondsInServer, userTimeZone) ;
+		var parsedDateWithoutTime = DateUtil.getCurrentDate(&quot;yyyy-MM-dd&quot;);
+		//logger.info(&quot;Time with offset: &quot; + sentMessageTimeWithCorrectOffset)
+		parsedTotalDate.push(parsedDateWithoutTime +  &quot; &quot; + sentMessageTimeWithCorrectOffset + &quot;.000000&quot;);
+
+		var weekDayMetafeature = generateWeekDayMetafeature()
+		var timeMetafeature = generateTimeMetafeature(sentMessageTimeWithCorrectOffset);
+
+		// Total metafeatures
+		var totalMetafeatures = userMetafeatures.concat([weekDayMetafeature,timeMetafeature]);
+
+		//logger.info(&quot;Las metafeatures para el user con id &quot; + userId + &quot; junto con el contexto son: &quot; + totalMetafeatures);
+
+		var filteredMessageIds = [];
+
+		while(messages.next()){ // For each message
+			
+			var messageId = messages.getInt(1);
+			var messageMetafeatures = [&quot;&quot; + messages.getString(5), &quot;&quot; + messages.getString(6), &quot;&quot; + messages.getString(7), &quot;&quot; + messages.getString(8), &quot;&quot; + messages.getString(9), 
+								  &quot;&quot; + messages.getString(10), &quot;&quot; + messages.getString(11), &quot;&quot; + messages.getString(12), &quot;&quot; + messages.getString(13), &quot;&quot; + messages.getString(14), 
+								  &quot;&quot; + messages.getString(15), &quot;&quot; + messages.getString(16), &quot;&quot; + messages.getString(17), &quot;&quot; + messages.getString(18), &quot;&quot; + messages.getString(19), 
+								  &quot;&quot; + messages.getString(20), &quot;&quot; + messages.getString(21), &quot;&quot; + messages.getString(22), &quot;&quot; + messages.getString(23), &quot;&quot; + messages.getString(24), 
+								  &quot;&quot; + messages.getString(25), &quot;&quot; + messages.getString(26), &quot;&quot; + messages.getString(27), &quot;&quot; + messages.getString(28), &quot;&quot; + messages.getString(29), 
+								  &quot;&quot; + messages.getString(30), &quot;&quot; + messages.getString(31), &quot;&quot; + messages.getString(32), &quot;&quot; + messages.getString(33), &quot;&quot; + messages.getString(34), 
+								  &quot;&quot; + messages.getString(35), &quot;&quot; + messages.getString(36), &quot;&quot; + messages.getString(37), &quot;&quot; + messages.getString(38), &quot;&quot; + messages.getString(39), 
+								  &quot;&quot; + messages.getString(40), &quot;&quot; + messages.getString(41), &quot;&quot; + messages.getString(42), &quot;&quot; + messages.getString(43), &quot;&quot; + messages.getString(44), 
+								  &quot;&quot; + messages.getString(45), &quot;&quot; + messages.getString(46), &quot;&quot; + messages.getString(47), &quot;&quot; + messages.getString(48), &quot;&quot; + messages.getString(49), 
+								  &quot;&quot; + messages.getString(50), &quot;&quot; + messages.getString(51), &quot;&quot; + messages.getString(52), &quot;&quot; + messages.getString(53), &quot;&quot; + messages.getString(54), 
+								  &quot;&quot; + messages.getString(55), &quot;&quot; + messages.getString(56), &quot;&quot; + messages.getString(57), &quot;&quot; + messages.getString(58), &quot;&quot; + messages.getString(59), 
+								  &quot;&quot; + messages.getString(60), &quot;&quot; + messages.getString(61), &quot;&quot; + messages.getString(62), &quot;&quot; + messages.getString(63), &quot;&quot; + messages.getString(64), 
+								  &quot;&quot; + messages.getString(65), &quot;&quot; + messages.getString(66), &quot;&quot; + messages.getString(67), &quot;&quot; + messages.getString(68)];
+								  
+			//logger.info(&quot;Las metafeatures para el user con id &quot; + userId + &quot; junto con el contexto son: &quot; + totalMetafeatures);
+			//logger.info(&quot;Las metafeatures para el mensaje con id &quot; + messageId + &quot; son: &quot; + messageMetafeatures);
+
+			
+			var matchFeatures = matchMetafeaturesWithMessage(messageMetafeatures, totalMetafeatures);
+			
+			if( matchFeatures){
+				filteredMessageIds = filteredMessageIds.concat([messageId]);
+				
+			}
+			// Test purpose
+			/*else{
+				logger.info(&quot;Las metafeatures no coinciden para el mensaje con id: &quot; + messageId + &quot;y el id &quot; + userId);
+			}*/
+		}
+		messages.beforeFirst();
+		
+		// logger.info(&quot;mensajes posibles a mandar: &quot; + filteredMessageIds);
+
+		
+		//group verification
+
+		var userGroup = userResult.getString(3);
+		
+		
+		if(userGroup == &quot;B&quot;){ // Control group. The second step not applied, random message selection (between the filtered messages)
+
+			// logger.info(&quot;El usuario con id &quot; + userId + &quot; pertenece a un grupo de control&quot;)
+			var messageIdRandomlySelected = selectLeastSentMessageRandomly(dbConn, userId, filteredMessageIds, messageIdsSelected);
+			
+			if(messageIdRandomlySelected != 0){
+				messageIdsSelected.push(messageIdRandomlySelected); // messageIdSelected is used to don&apos;t repeat messages at same
+			}
+			
+			
+		}else if(userGroup == &quot;A&quot; || userGroup == &quot;PATIENT1&quot; | userGroup == &quot;PATIENT2&quot;){ // Intervention groups, apply health recommender system second step
+			
+			// logger.info(&quot;El usuario con id &quot; + userId + &quot; pertenece a un grupo de intervencion&quot;)
+			// first substep in the second step: user metafeatures match puctuations: cotinue;
+			var matchMetafeaturesWithEachUser = [];
+			indexOfThisUserInMatrixMetafeaturesAllUsers = arrayAppliedUserIds.indexOf(userId);
+			for(var indexUser = 0 ; indexUser &lt; matrixMetafeaturesEachUser.length ; indexUser++ ){
+				if(indexOfThisUserInMatrixMetafeaturesAllUsers != indexUser){
+				matchMetafeaturesWithEachUser.push(generateUserMatchPercentage(userMetafeatures, matrixMetafeaturesEachUser[indexUser]));
+				}
+				else{
+					matchMetafeaturesWithEachUser.push(0);
+				}
+			}
+			//logger.info(&quot;El array de metafeatures matching es: &quot; + matchMetafeaturesWithEachUser);
+
+			//second substep in the second step: message punctuations.
+			filteredMessagePunctuations = [];
+			for(var indexMessage = 0 ; indexMessage &lt; totalMessagesIds.length ; indexMessage++){
+				messagePunctuation = 0;
+				if(filteredMessageIds.indexOf(totalMessagesIds[indexMessage]) !=-1){
+					
+					if(matchMetafeaturesWithEachUser.length == 0){
+						filteredMessagePunctuations.push(0.5);
+					}else{
+						for(var indexMatch = 0; indexMatch &lt; matchMetafeaturesWithEachUser.length ; indexMatch++){
+							messagePunctuation = messagePunctuation + matchMetafeaturesWithEachUser[indexMatch]*matrixMessagesRatingsEachUser[indexMatch][indexMessage];
+						}
+						//logger.info(messagePunctuation);
+						filteredMessagePunctuations.push(messagePunctuation/(5*matrixMetafeaturesEachUser.length));
+					}
+				}
+			}
+			//logger.info(&quot;Las valoraciones de los mensajes son: &quot; + filteredMessagePunctuations);
+	
+			// third substep in the second step: get the message least sent with best punctuation
+			var messageIdSelectedByPunctuation = selectLeastSentMessageByPunctuation(dbConn, userId, filteredMessageIds, filteredMessagePunctuations, messageIdsSelected);
+			if( messageIdSelectedByPunctuation != 0){
+				messageIdsSelected.push(messageIdSelectedByPunctuation); // messageIdsSelected is used to don&apos;t repeat messages at same
+			}
+
+		// logger.info(&quot;Lista de mensajes para el usuario con la id &quot; + userId + &quot;: &quot; + filteredMessageIds);
+		}
+	}
+	
+	if(messageIdsSelected.length == 0){
+		// logger.info(&quot;El usuario con id &quot; + userId + &quot; no tiene mensajes coincidentes que recibir &quot;)
+		continue;
+	}
+	var insertMessagesToSendQuery = &quot;INSERT INTO sentmessage (message_id, user_id, sent_date) VALUES &quot;;
+	for(mess = 0 ; mess &lt; messageIdsSelected.length ; mess++){
+		if(mess &lt; messageIdsSelected.length-1){
+			insertMessagesToSendQuery = insertMessagesToSendQuery + &quot;(&quot; + messageIdsSelected[mess] + &quot;, &quot; + userId + &quot;, &apos;&quot; + parsedTotalDate[mess] + &quot;&apos;),&quot;;
+		}else{
+			insertMessagesToSendQuery = insertMessagesToSendQuery + &quot;(&quot; + messageIdsSelected[mess] + &quot;, &quot; + userId + &quot;, &apos;&quot; + parsedTotalDate[mess] + &quot;&apos;);&quot;;
+		}
+	}
+	
+	logger.info(insertMessagesToSendQuery);
+	dbConn.executeUpdate(insertMessagesToSendQuery);
+
+}
+  
+}catch(e){
+
+	logger.info(e);
+}
+finally {
+	if (dbConn) { 
+		dbConn.close();
+	}
+	var getDateEnd = new Date();
+  	var getTimeSpent = (getDateEnd.getTime() - getDateStart.getTime())/1000;
+  	logger.info(&quot;time spent: &quot; + getTimeSpent);
+}
+
+
+return userResult;</script>
+    </properties>
+    <transformer version="3.5.1">
+      <elements/>
+      <inboundTemplate encoding="base64"></inboundTemplate>
+      <inboundDataType>XML</inboundDataType>
+      <outboundDataType>XML</outboundDataType>
+      <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+        <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+          <stripNamespaces>true</stripNamespaces>
+        </serializationProperties>
+        <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+          <splitType>Element_Name</splitType>
+          <elementName></elementName>
+          <level>1</level>
+          <query></query>
+          <batchScript></batchScript>
+        </batchProperties>
+      </inboundProperties>
+      <outboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+        <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+          <stripNamespaces>true</stripNamespaces>
+        </serializationProperties>
+        <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+          <splitType>Element_Name</splitType>
+          <elementName></elementName>
+          <level>1</level>
+          <query></query>
+          <batchScript></batchScript>
+        </batchProperties>
+      </outboundProperties>
+    </transformer>
+    <filter version="3.5.1">
+      <elements/>
+    </filter>
+    <transportName>JavaScript Reader</transportName>
+    <mode>SOURCE</mode>
+    <enabled>true</enabled>
+    <waitForPrevious>true</waitForPrevious>
+  </sourceConnector>
+  <destinationConnectors>
+    <connector version="3.5.1">
+      <metaDataId>1</metaDataId>
+      <name>Destination 1</name>
+      <properties class="com.mirth.connect.connectors.file.FileDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>false</queueEnabled>
+          <sendFirst>false</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>0</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>1</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <scheme>FILE</scheme>
+        <host>/</host>
+        <outputPattern>RecommenderSystemResponses</outputPattern>
+        <anonymous>true</anonymous>
+        <username>anonymous</username>
+        <password>anonymous</password>
+        <timeout>10000</timeout>
+        <secure>true</secure>
+        <passive>true</passive>
+        <validateConnection>true</validateConnection>
+        <outputAppend>true</outputAppend>
+        <errorOnExists>false</errorOnExists>
+        <temporary>false</temporary>
+        <binary>false</binary>
+        <charsetEncoding>DEFAULT_ENCODING</charsetEncoding>
+        <template>---------
+${DATE}: ${response}
+</template>
+      </properties>
+      <transformer version="3.5.1">
+        <elements/>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>XML</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements/>
+        <inboundDataType>XML</inboundDataType>
+        <outboundDataType>XML</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+          <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+            <stripNamespaces>true</stripNamespaces>
+          </serializationProperties>
+          <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+            <splitType>Element_Name</splitType>
+            <elementName></elementName>
+            <level>1</level>
+            <query></query>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements/>
+      </filter>
+      <transportName>File Writer</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+  </destinationConnectors>
+  <preprocessingScript>// Modify the message variable below to pre process data
+return message;</preprocessingScript>
+  <postprocessingScript>// This script executes once after a message has been processed
+// Responses returned from here will be stored as &quot;Postprocessor&quot; in the response map
+return;</postprocessingScript>
+  <deployScript>// This script executes once when the channel is deployed
+// You only have access to the globalMap and globalChannelMap here to persist data
+return;</deployScript>
+  <undeployScript>// This script executes once when the channel is undeployed
+// You only have access to the globalMap and globalChannelMap here to persist data
+return;</undeployScript>
+  <properties version="3.5.1">
+    <clearGlobalChannelMap>true</clearGlobalChannelMap>
+    <messageStorageMode>PRODUCTION</messageStorageMode>
+    <encryptData>false</encryptData>
+    <removeContentOnCompletion>false</removeContentOnCompletion>
+    <removeOnlyFilteredOnCompletion>false</removeOnlyFilteredOnCompletion>
+    <removeAttachmentsOnCompletion>false</removeAttachmentsOnCompletion>
+    <initialState>STARTED</initialState>
+    <storeAttachments>false</storeAttachments>
+    <metaDataColumns>
+      <metaDataColumn>
+        <name>SOURCE</name>
+        <type>STRING</type>
+        <mappingName>mirth_source</mappingName>
+      </metaDataColumn>
+      <metaDataColumn>
+        <name>TYPE</name>
+        <type>STRING</type>
+        <mappingName>mirth_type</mappingName>
+      </metaDataColumn>
+    </metaDataColumns>
+    <attachmentProperties version="3.5.1">
+      <type>None</type>
+      <properties/>
+    </attachmentProperties>
+    <resourceIds class="linked-hash-map">
+      <entry>
+        <string>Default Resource</string>
+        <string>[Default Resource]</string>
+      </entry>
+    </resourceIds>
+  </properties>
+  <exportData>
+    <metadata>
+      <enabled>true</enabled>
+      <lastModified>
+        <time>1526754521890</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <pruningSettings>
+        <archiveEnabled>true</archiveEnabled>
+      </pruningSettings>
+    </metadata>
+    <codeTemplateLibraries>
+      <codeTemplateLibrary version="3.5.1">
+        <id>8d57521d-a8fc-458e-99cf-d56d9d741390</id>
+        <name>SFBUtils</name>
+        <revision>23</revision>
+        <lastModified>
+          <time>1514138031869</time>
+          <timezone>Europe/Paris</timezone>
+        </lastModified>
+        <description></description>
+        <includeNewChannels>false</includeNewChannels>
+        <enabledChannelIds>
+          <string>9d2c084d-bbd8-402c-a551-a2caa137b91e</string>
+          <string>e73dc40a-fc0f-460e-a9aa-aa1f830b16c1</string>
+          <string>d550e3d4-ef58-4338-aa64-d6797cc98b53</string>
+        </enabledChannelIds>
+        <disabledChannelIds>
+          <string>8e44daa0-2590-4b0a-9c08-194863cbc6ee</string>
+          <string>278aafa7-fbd7-4053-a79f-f16078b7ef19</string>
+          <string>a8b0df40-de82-4462-9b22-8c3eb48d92be</string>
+          <string>41e48daa-3fbb-4f26-b5ee-3a3793d9b2ba</string>
+          <string>ad6a9979-1e5b-4a48-9ecb-83d28295fbc0</string>
+          <string>c1bc5c3f-92f6-4d7f-9cc2-9886761bfae0</string>
+          <string>4c1f7c6d-cb85-434e-902a-a3b86b4ea503</string>
+          <string>abd6b38a-c048-4c7e-a77f-d17ca13f024c</string>
+          <string>501fe75b-3421-4a86-9776-1971b3cf4b0b</string>
+          <string>e1c9eea6-aa05-4492-a01f-c7f867e7310f</string>
+          <string>b7cfd2ba-f3cf-4b7d-a6cb-cbd2768893c2</string>
+          <string>fcee1912-fa5b-47fa-9da4-d6a2148c8e4c</string>
+          <string>9f98ae0f-5a61-43d4-8d82-7086e0c1d148</string>
+          <string>6dcd6af9-7395-447e-b4d4-450752fe73a4</string>
+          <string>32c33267-b2b5-4dec-9f37-4e7ee3125dc6</string>
+          <string>b5703bf5-963d-47e0-a4db-bcbe1b82bb1b</string>
+          <string>792b1bc8-3942-4e57-a07c-3d4d5bdf2758</string>
+          <string>72b5a5ab-4725-4e7b-8f11-eebee8b07d38</string>
+          <string>4567857e-e670-4ed9-8f7e-8f49f66ab106</string>
+        </disabledChannelIds>
+        <codeTemplates>
+          <codeTemplate version="3.5.1">
+            <id>027142be-44da-41c5-8a9a-19c04ac7b7ae</id>
+            <name>AgeUserMetafeature</name>
+            <revision>4</revision>
+            <lastModified>
+              <time>1502359089006</time>
+              <timezone>Europe/Paris</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/**
+	Generates the correct user metafeature for the age user
+
+	@param {Integer} birthDateTime - birth date time in seconds
+	@return {String} age user metafeature code
+*/
+
+function generateAgeUserMetafeature(birthDateTime){
+
+	var ageMetafeature;
+	
+	years = birthDateTime/(60*60*24*365);
+
+	if(years &lt;26){ // Young
+		ageMetafeature = &quot;100&quot;;
+	}else if(years &gt;=26 &amp;&amp; years &lt;71){ //Medium
+		ageMetafeature = &quot;010&quot;;
+	}else{ // Old
+		ageMetafeature = &quot;001&quot;;
+	}
+	return ageMetafeature;
+	
+}</code>
+            </properties>
+          </codeTemplate>
+          <codeTemplate version="3.5.1">
+            <id>88f32fec-1ed5-495b-9f8e-500c488e270a</id>
+            <name>CigarettesConsumptionMetafeature</name>
+            <revision>6</revision>
+            <lastModified>
+              <time>1502361439806</time>
+              <timezone>Europe/Paris</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/**
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+function generateCigarettesConsumptionUserMetafeature(dailyCigarettes) {
+
+	var cigarettesConsumptionMetafeature;
+
+	if(dailyCigarettes &lt; 11){ // Low
+		cigarettesConsumptionMetafeature = &quot;10&quot;;
+	}else{ // High
+		cigarettesConsumptionMetafeature = &quot;01&quot;;
+	}
+	
+	return cigarettesConsumptionMetafeature;
+}</code>
+            </properties>
+          </codeTemplate>
+          <codeTemplate version="3.5.1">
+            <id>2b9773ef-bb7c-43c8-9999-43e4791baa83</id>
+            <name>GetMonday</name>
+            <revision>2</revision>
+            <lastModified>
+              <time>1506601006930</time>
+              <timezone>Europe/Paris</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/**
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+
+function getMondayFormatDate(d) {
+	
+  d = new Date(d);
+  var day = d.getDay(),
+      diff = d.getDate() - day + (day == 0 ? -6:1); // adjust when day is sunday
+  
+  var mondayDate = new Date(d.setDate(diff))
+  // 2017-08-13 13:47:20.0457
+  return  mondayDate.getFullYear() + &quot;-&quot; + (mondayDate.getMonth() + 1) + &quot;-&quot; + mondayDate.getDate().toString() + &quot; 00:00:00.0000&quot;;
+}</code>
+            </properties>
+          </codeTemplate>
+          <codeTemplate version="3.5.1">
+            <id>cd479a08-3c4d-45a7-964d-13bc5b779b70</id>
+            <name>MatchMetafeaturesWithMessage</name>
+            <revision>26</revision>
+            <lastModified>
+              <time>1506601007008</time>
+              <timezone>Europe/Paris</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/*
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+function matchMetafeaturesWithMessage(message_metafeatures, user_metafeatures) {
+	var match = true;
+	if(message_metafeatures.length != user_metafeatures.length){
+		//logger.info(&quot;Arrays haven&apos;t same length. Result: false&quot;);
+		match = false;  
+	}else{
+		//logger.info(&quot;Arrays have same length. Continue...&quot;);
+		for(var i = 0; i &lt; message_metafeatures.length; i++){
+			if(message_metafeatures[i] == &quot;1&quot;){
+				// logger.info(&quot;Message metafeature always true. Continue to another iteration...&quot;);
+				continue;
+			}else{
+				// logger.info(&quot;Message metafeature isn&apos;t true always. Continue...&quot;);
+				if(user_metafeatures[i] == &quot;0&quot;){
+					// logger.info(&quot;User metafeature without response. Break and Result: false&quot;);
+					match = false;
+					break;
+				}else{
+					// logger.info(&quot;User metafeature with response. Continue...&quot;);
+					if(message_metafeatures[i].length != user_metafeatures[i].length){
+						// logger.info(&quot;Metafeature strings haven&apos;t the same length. Break and Result: false &quot;);
+						// logger.info(&quot;message_metafeatures[i]: &quot; + message_metafeatures[i]  + &quot;user_metafeatures[i] &quot;  + user_metafeatures[i]);
+						// logger.info(&quot;message_metafeatures[i].length: &quot; + message_metafeatures[i].length  + &quot;user_metafeatures[i].length  &quot;  + user_metafeatures[i].length);
+						match = false
+						break;
+					}else{
+						// logger.info(&quot;Metafeature strings have the same length. Continue comparing &quot; + user_metafeatures[i] +&quot; with &quot; + message_metafeatures[i]);
+						match = false;
+						for(j = 0; j &lt;message_metafeatures[i].length; j++){
+							if(message_metafeatures[i][j] == user_metafeatures[i][j] &amp;&amp; message_metafeatures[i][j] == &apos;1&apos;){
+								// logger.info(&quot;Match &quot; + user_metafeatures[i][j] +&quot; with &quot; + message_metafeatures[i][j]);
+								//logger.info(&quot;Metafeature strings match with value= &apos;1&apos; in a char value. Break and Continue... &quot;);
+								match = true;
+								break; 
+							}
+						}
+						if(!match){
+							// logger.info(&quot;Metafeature strings not match with value= &apos;1&apos; in any char values. Break and result: False &quot;);
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return match;
+}</code>
+            </properties>
+          </codeTemplate>
+          <codeTemplate version="3.5.1">
+            <id>06650567-d30b-4f53-86fa-078008e419d2</id>
+            <name>QuittingAttemptTimeMetafeature</name>
+            <revision>7</revision>
+            <lastModified>
+              <time>1502688377676</time>
+              <timezone>Europe/Paris</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/**
+	Generates the correct user metafeature for the user quitting time
+
+	@param {Integer} quittingTime - quitting time in seconds
+	@return {String} time quitting metafeature code
+*/
+
+function generateQuittingAttemptTimeUserMetafeature(quittingTime){
+
+	var daysQuittingMetafeature;
+
+	
+	if(quittingTime &lt;0){
+		daysQuittingMetafeature = &quot;1000&quot;;
+	}
+	else{
+		time = quittingTime/(60*60*24);
+		
+		if(time &lt; 14){ // Short time
+			daysQuittingMetafeature = &quot;0100&quot;;
+		}else if(time &gt;= 14 &amp;&amp; time &lt;60){ // Long time
+			daysQuittingMetafeature = &quot;0010&quot;;
+		}else{
+			daysQuittingMetafeature = &quot;0001&quot;;
+		}
+	}
+	
+	return daysQuittingMetafeature;
+	
+}</code>
+            </properties>
+          </codeTemplate>
+          <codeTemplate version="3.5.1">
+            <id>ce0bbb9a-6a1e-4063-988f-13e15de96060</id>
+            <name>RandomHourInInterval</name>
+            <revision>33</revision>
+            <lastModified>
+              <time>1506601006852</time>
+              <timezone>Europe/Paris</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/**
+	Creates random hour between a time interval.
+
+	@param {String} startTime - start time with format &apos;hh:mm:ss&apos;
+	@param {String} endTime - end time with format &apos;hh:mm:ss&apos;
+	@return {String} return random hour with format &apos;hh:mm:00&apos;
+*/
+function getRandomTimeInInterval(startTime, endTime) {
+	
+	startTime = &quot;&quot; + startTime.toString();
+	endTime = &quot;&quot; + endTime.toString();
+	
+	var startTimeArray = startTime.split(&quot;:&quot;);
+	var startTimeInFloat = parseInt(startTimeArray[0][0]==&quot;0&quot; ? startTimeArray[0][1] : startTimeArray[0],10) 
+								+ parseInt(startTimeArray[1][0]==&quot;0&quot; ? startTimeArray[1][1] : startTimeArray[1], 10)/60;
+
+	var endTimeArray = endTime.split(&quot;:&quot;);
+	var endTimeInFloat = parseInt(endTimeArray[0][0]==&quot;0&quot; ? endTimeArray[0][1] : endTimeArray[0], 10) 
+								+ parseInt(endTimeArray[1][0]==&quot;0&quot; ? endTimeArray[1][1] : endTimeArray[1], 10)/60;
+
+	var currentDate = new Date();
+	var currentHour = currentDate.getHours();
+	var currentMinute = currentDate.getMinutes();
+
+	var currentTimeFloat = currentHour + (currentMinute/60) ;
+
+/*	logger.info(&quot;start interval values&quot;)
+	logger.info(startTimeArray[0] + &quot; - &quot; + startTimeArray[1])
+	logger.info(parseInt(startTimeArray[0]) + &quot; - &quot; + parseInt(startTimeArray[1])/60)
+	logger.info(startTimeInFloat)
+	logger.info(&quot;end interval values&quot;)
+	logger.info(endTimeArray[0] + &quot; - &quot; + endTimeArray[1])
+	logger.info(parseInt(endTimeArray[0]) + &quot; - &quot; + parseInt(endTimeArray[1])/60)
+	logger.info(endTimeInFloat)
+*/
+	
+	var timeSelectedInFloat;
+	var existAValidTime = true;
+
+	var validStartTime;
+	if(startTimeInFloat &lt; endTimeInFloat){
+		//logger.info(&quot;start &lt; end&quot;)
+		if(currentTimeFloat &lt; endTimeInFloat){
+			validStartTime = Math.max(startTimeInFloat, currentTimeFloat);
+			timeSelectedInFloat = Math.random() * (endTimeInFloat - validStartTime) + validStartTime;
+		}else{
+			existAValidTime = false;
+		}
+	}else if (startTimeInFloat &gt; endTimeInFloat){
+		//logger.info(&quot;start &gt; end&quot;)
+		firstOrSercondRandomSelection = Math.random();
+
+		var existAValidTimeInFirstRange = currentTimeFloat &lt; startTimeInFloat;
+		// var existAValidTimeInSecondRange = true; // currentTimeFloat &lt; 23.999...
+
+		var timeSelectedInFirstRangeFloat;
+		var timeSelectedInSecondRangeFloat;
+
+		if(existAValidTimeInFirstRange &amp;&amp; firstOrSercondRandomSelection &lt; 0.5){
+			timeSelectedInFirstRangeFloat = Math.random() * (startTimeFloat - currentTimeFloat) + currentTimeFloat;
+			timeSelectedInFloat = timeSelectedInFirstRangeFloat;	
+		}else{
+			validStartTime = Math.max(endTimeInFloat, currentTimeFloat);
+			timeSelectedInFirstRangeFloat = Math.random() * (23.9999 - validStartTime) + validStartTime;
+			timeSelectedInFloat = timeSelectedInSecondRangeFloat;
+		}
+		
+	}else{
+		//logger.info(&quot;startTimeInFloat == endTimeInFloat&quot;)
+		if(currentTimeFloat &lt; endTimeInFloat){
+			return startTime;
+		}else{
+			existAValidTime = false;
+		}
+	}
+
+	if(!existAValidTime){
+		return &quot;&quot;;
+	}
+	
+	hour = Math.floor(timeSelectedInFloat);
+	minutes = Math.floor((timeSelectedInFloat - hour)*60);
+
+	//logger.info(&quot;hour:  &quot; + hour + &quot; and minute: &quot; + minutes );
+
+	
+	var hourString = hour.toString();
+	hourString = hourString.length == 1 ? &quot;0&quot; + hourString : hourString;
+
+	var minutesString = minutes.toString();
+	minutesString = minutesString.length == 1 ? &quot;0&quot; + minutesString : minutesString;
+	
+	var time = hourString + &quot;:&quot; + minutesString +&quot;:00&quot;;
+
+	//logger.info(&quot;Time selected:&quot; + time);
+
+	return time;
+}</code>
+            </properties>
+          </codeTemplate>
+          <codeTemplate version="3.5.1">
+            <id>b62cfd65-37af-44b6-b29a-8d4a04ad9cc9</id>
+            <name>RichmondTestResultMetafeature</name>
+            <revision>6</revision>
+            <lastModified>
+              <time>1502360363888</time>
+              <timezone>Europe/Paris</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/**
+	Generates the correct richmond test punctuation metafeature for the user quitting time.
+
+	@param {Integer} richmondTestResult - motivation test punctuation
+	@return {String} richmond test punctuation metafeature
+*/
+function generateRichmondTestResultUserMetafeature(richmondTestResult) {
+
+	var richmondTestMetafeature;
+
+	if(richmondTestResult &lt; 5){ //Low
+		richmondTestMetafeature = &quot;100&quot;;
+	}else if(richmondTestResult &gt;=5 &amp;&amp; richmondTestResult &lt; 8){ //Medium
+		richmondTestMetafeature = &quot;010&quot;;
+	}else{ // High
+		richmondTestMetafeature = &quot;001&quot;;
+	}
+	
+	return richmondTestMetafeature;
+}</code>
+            </properties>
+          </codeTemplate>
+          <codeTemplate version="3.5.1">
+            <id>9ccce698-3c77-4497-ac10-013f0e8732d9</id>
+            <name>SpentMoneyMetafeature</name>
+            <revision>16</revision>
+            <lastModified>
+              <time>1502386208547</time>
+              <timezone>Europe/Paris</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/**
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+function generateSpentMoneyUserMetafeature(weeklyTobacoExpenditure, currency){
+
+	const eurosToTaiwaneseDollarConversionCoefficient = 32.622;
+	
+	const taiwaneseDollarToEurosConversionCoefficient = 0.03065;
+	const eurosToEurosConversionCoefficient = 1.0;
+	const dollarToEurosConversionCoefficient = 0.932;
+	const yuanToEurosConversionCoefficient = 0.135;
+	const britishPoundToEurosConversionCoefficient = 1.156;
+
+	var spentMoneyInEuros;
+	
+	var spentMoneyMetafeature;
+	switch (&quot;&quot; + currency){
+		case &quot;TWD&quot;:
+			spentMoneyInEuros = weeklyTobacoExpenditure*taiwaneseDollarToEurosConversionCoefficient;
+			break;
+		case &quot;EUR&quot;:
+			spentMoneyInEuros = weeklyTobacoExpenditure*eurosToEurosConversionCoefficient;
+			break;
+		case &quot;USD&quot;:
+			spentMoneyInEuros = weeklyTobacoExpenditure*dollarToEurosConversionCoefficient;
+			break;
+		case &quot;CNY&quot;:
+			spentMoneyInEuros = weeklyTobacoExpenditure*yuanToEurosConversionCoefficient;
+			break;
+		case &quot;GBP&quot;:
+			spentMoneyInEuros = weeklyTobacoExpenditure*britishPoundToEurosConversionCoefficient;
+			break;
+	}
+	
+	var spentMoneyInTaiwaneseDollar = spentMoneyInEuros * eurosToTaiwaneseDollarConversionCoefficient;
+	
+	if(spentMoneyInTaiwaneseDollar &lt; 700.0){ //Low
+		spentMoneyMetafeature = &quot;100&quot;;
+	}else if(spentMoneyInTaiwaneseDollar &gt;=700.0 &amp;&amp; spentMoneyInTaiwaneseDollar &lt; 2000.0){ //Medium
+		spentMoneyMetafeature = &quot;010&quot;;
+	}else{ // High
+		spentMoneyMetafeature = &quot;001&quot;;
+	}
+	
+	return spentMoneyMetafeature;
+}</code>
+            </properties>
+          </codeTemplate>
+          <codeTemplate version="3.5.1">
+            <id>e80f3ad6-1762-4b40-902e-b2fae48d90a3</id>
+            <name>TimeMetafeature</name>
+            <revision>6</revision>
+            <lastModified>
+              <time>1506601007039</time>
+              <timezone>Europe/Paris</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/**
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+function generateTimeMetafeature(time) {
+
+	//logger.info(&quot;the time is: &quot; + time);
+
+	time = &quot;&quot; + time.toString();
+	
+	var timeArray = time.split(&quot;:&quot;);
+	var timeInFloat = parseInt(timeArray[0][0]==&quot;0&quot; ? timeArray[0][1] : timeArray[0], 10) 
+								+ parseInt(timeArray[1][0]==&quot;0&quot; ? timeArray[1][1] : timeArray[1], 10)/60;
+								
+	var timeMetafeature;
+
+	if(timeInFloat &gt; 8 &amp;&amp; timeInFloat &lt;11.5){
+		timeMetafeature = &quot;100&quot;;
+	}else if(timeInFloat &gt; 12 &amp;&amp; timeInFloat &lt;15){
+		timeMetafeature = &quot;010&quot;;
+	}else if (timeInFloat &gt; 19 &amp;&amp; timeInFloat &lt;22){
+		timeMetafeature = &quot;001&quot;;
+	}else{
+		timeMetafeature = &quot;0&quot;;
+	}
+
+	return timeMetafeature;
+}</code>
+            </properties>
+          </codeTemplate>
+          <codeTemplate version="3.5.1">
+            <id>42947a79-a623-42ac-9529-226f89da5cf9</id>
+            <name>TimeOffSetConversion</name>
+            <revision>13</revision>
+            <lastModified>
+              <time>1506601006961</time>
+              <timezone>Europe/Paris</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/**
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+function timeOffSetConversion(time, currentOffsetSeconds, destinationTimeZone) {
+	
+	var currentOffSetMinutes = Math.round(currentOffsetSeconds/60);
+		
+	var javaTimeZone = java.util.TimeZone.getTimeZone(destinationTimeZone);
+	var offSetOfUserTimeZone = javaTimeZone.getOffset(new Date().getTime()) / 1000 / 60;
+
+	/*
+	logger.info(&quot;El offeset en minutos de la base de datos es: &quot; + currentOffSetMinutes);
+		
+	logger.info(&quot;La zona horaria destino es: &quot; + destinationTimeZone + &quot; por lo que el GMT es: &quot; + offSetOfUserTimeZone  + 
+				&quot;. Por lo que la diferencia en minutos con el GMT de la base de datos es: &quot; + (currentOffSetMinutes  - offSetOfUserTimeZone));
+				*/
+	
+	var timeJSString = &quot;&quot; + time;
+	
+	var timeMinuteAndHourAndSecond = timeJSString.split(&quot;:&quot;);
+	
+	//logger.info(&quot;Despues del split es: &quot; + timeMinuteAndHourAndSecond.toString());
+
+	var hourInt = parseInt(timeMinuteAndHourAndSecond[0]*60, 10);
+	var minuteInt = parseInt(timeMinuteAndHourAndSecond[1],10);
+	var offsetCorrection = parseInt((currentOffSetMinutes - offSetOfUserTimeZone), 10);
+	
+	var timeWithCorrectOffsetInt = hourInt + minuteInt - offsetCorrection;
+	
+	//logger.info(&quot;Valor en integer: &quot; + timeWithCorrectOffsetInt);
+
+	var timeWithCorrectOffsetHour = ((parseInt(timeWithCorrectOffsetInt/60, 10) % 24) + 24) % 24;
+	
+	//logger.info(&quot;Valor de la hora: &quot; + timeWithCorrectOffsetHour);
+	
+	var timeWithCorrectOffsetMinute = Math.abs(timeWithCorrectOffsetInt) % 60;
+
+	var timeWithCorrectOffset = ((timeWithCorrectOffsetHour &lt;10) ? (&quot;0&quot; + timeWithCorrectOffsetHour) : (&quot;&quot; + timeWithCorrectOffsetHour)) 
+								+ &quot;:&quot; + ((timeWithCorrectOffsetMinute &lt;10) ? (&quot;0&quot; + timeWithCorrectOffsetMinute) : (&quot;&quot; + timeWithCorrectOffsetMinute))
+								+ &quot;:00&quot;;
+
+	//logger.info(&quot;Las fecha &quot; + timeJSString + &quot; pasa a ser: &quot; + timeWithCorrectOffset);
+
+	return timeWithCorrectOffset;
+}</code>
+            </properties>
+          </codeTemplate>
+          <codeTemplate version="3.5.1">
+            <id>f4bca305-b959-49ed-9586-16f6592830c4</id>
+            <name>TimeSinceDate</name>
+            <revision>13</revision>
+            <lastModified>
+              <time>1506601006898</time>
+              <timezone>Europe/Paris</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/**
+	Calculates the time in seconds between the current date and date argument
+
+	@param {String} date - A format yyyy-mm-dd date string
+	@return {Integer} time in seconds
+*/
+
+function timeSinceDate(date) {
+	var dateWithoutTimeZone = date + &quot;T00:00:00-00:00&quot;
+	var startDate = new Date(dateWithoutTimeZone)
+	var currentDate = new Date();
+	
+	var seconds =  (currentDate.getTime() - startDate.getTime())/1000;
+	return seconds;
+	
+}</code>
+            </properties>
+          </codeTemplate>
+          <codeTemplate version="3.5.1">
+            <id>1ed1b4ab-b600-40d2-9890-dccf3809497b</id>
+            <name>UsersMatchPercentage</name>
+            <revision>26</revision>
+            <lastModified>
+              <time>1502582645059</time>
+              <timezone>Europe/Paris</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/**
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+function generateUserMatchPercentage(user1Metafeatures, user2Metafeatures) {
+
+	var matchPercentage;
+	if(user1Metafeatures.length != user2Metafeatures.length){
+		matchPercentage = 0;
+	}else{  
+
+		var metafeaturesSumPunctuation = 0.0;
+		
+		var metafeaturesAllowedByBothUsers = 0;
+		
+		for(var i = 0 ; i &lt; user1Metafeatures.length ; i++){
+			var onesInMetafeatureUser1 = (user1Metafeatures[i].match(/1/g) || []).length;
+			// logger.info(&quot;Cantidad de &apos;1&apos;s en user 1: &quot; + onesInMetafeatureUser1) 
+			var onesInMetafeatureUser2 = (user2Metafeatures[i].match(/1/g) || []).length;
+			// logger.info(&quot;Cantidad de &apos;1&apos;s en user 2: &quot; + onesInMetafeatureUser2)
+			//logger.info(user1Metafeatures[i] + &quot; y &quot; + user2Metafeatures[i])
+			if(onesInMetafeatureUser1 != 0 &amp;&amp; onesInMetafeatureUser2 != 0 &amp;&amp; user1Metafeatures[i].length == user2Metafeatures[i].length){
+				if(user1Metafeatures[i] == user2Metafeatures[i]){ // All ones match, max punctuation
+					metafeaturesSumPunctuation = metafeaturesSumPunctuation + 1.0;
+					//logger.info(&quot;metafeature match&quot;)
+				}else if(!(onesInMetafeatureUser1 == 1 &amp;&amp; onesInMetafeatureUser2 == 1)){ // Inside of negative clause are and special but very frequent case: 
+																		// &apos;1&apos; char appears in each string only once but in different possition
+																		// The contemplation of this case can reduce computational cost
+					//logger.info(&quot;dont match and more than one 1&quot;)
+					for(j = 0; j &lt;user1Metafeatures[i].length; j++){
+						var penalizationForEachNotMatching = 1/user1Metafeatures[i].length;
+						if(user1Metafeatures[i][j] == user2Metafeatures[i][j] &amp;&amp; user1Metafeatures[i][j] != &apos;0&apos;){
+							//logger.info(&quot;Metafeature strings match with value= &apos;1&apos; in a char value. Break and Continue... &quot;);
+							metafeaturesSumPunctuation = metafeaturesSumPunctuation + 1.0;
+						}else if (user1Metafeatures[i][j] != user2Metafeatures[i][j]){
+							metafeaturesSumPunctuation = metafeaturesSumPunctuation - penalizationForEachNotMatching;
+						}
+					}
+					normalizedMetafeaturePuntuation = metafeaturesSumPunctuation / Math.max(onesInMetafeatureUser1, onesInMetafeatureUser2);
+					metafeaturesSumPunctuation = metafeaturesSumPunctuation + normalizedMetafeaturePuntuation;
+				}else{
+					//logger.info(&quot;dont match and only one 1 each&quot;)
+				}
+				metafeaturesAllowedByBothUsers = metafeaturesAllowedByBothUsers + 1;
+			}
+			
+		}
+		matchPercentage = metafeaturesSumPunctuation/metafeaturesAllowedByBothUsers;
+	}
+	return matchPercentage
+}</code>
+            </properties>
+          </codeTemplate>
+          <codeTemplate version="3.5.1">
+            <id>fd41f7f4-ce32-47e1-acb0-667f6796ec3a</id>
+            <name>WeekDayMetafeature</name>
+            <revision>7</revision>
+            <lastModified>
+              <time>1502577924334</time>
+              <timezone>Europe/Paris</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/**
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+function generateWeekDayMetafeature() {
+
+	const possibleWeekMetafeaturesCodes = [&quot;0000001&quot;,&quot;1000000&quot;, &quot;0100000&quot;, &quot;0010000&quot;, &quot;0001000&quot;, &quot;0000100&quot;, &quot;0000010&quot;]; // First element: sunday, sencond element: Monday, next weekdays in order
+	var currentDate = new Date();
+	var currentWeekDay = currentDate.getDay();
+
+	// logger.info(&quot;array de possibleWeekMetafeaturesCodes: &quot; + possibleWeekMetafeaturesCodes);
+	// logger.info(&quot;escogida la numero &quot; + currentWeekDay + &quot;, es decir: &quot; + possibleWeekMetafeaturesCodes[currentWeekDay]);
+	return possibleWeekMetafeaturesCodes[currentWeekDay];
+
+}</code>
+            </properties>
+          </codeTemplate>
+          <codeTemplate version="3.5.1">
+            <id>e4a444cc-776c-4365-acc1-493d07d935e9</id>
+            <name>YearsStartSmokingMetafeature</name>
+            <revision>9</revision>
+            <lastModified>
+              <time>1502387188790</time>
+              <timezone>Europe/Paris</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/**
+	Generates the correct user metafeature for the user start smoking time
+
+	@param {Integer} startSmokingDateTime - start smoking date time in seconds
+	@return {String} time smoking metafeature code
+*/
+
+function generateYearsStartSmokingUserMetafeature(startSmokingDateTime){
+
+	var yearsSmokingMetafeature;
+	
+	years = startSmokingDateTime/(60*60*24*365);
+
+	if(years &lt; 5){ // Short time
+		yearsSmokingMetafeature = &quot;10&quot;;
+	}else{ // Long time
+		yearsSmokingMetafeature = &quot;01&quot;;
+	}
+	return yearsSmokingMetafeature;
+	
+}</code>
+            </properties>
+          </codeTemplate>
+        </codeTemplates>
+      </codeTemplateLibrary>
+      <codeTemplateLibrary version="3.5.1">
+        <id>e05a690f-3a75-4949-a168-7e5bda94bb65</id>
+        <name>SFBUtilsWithDatabaseCommunication</name>
+        <revision>9</revision>
+        <lastModified>
+          <time>1514138031869</time>
+          <timezone>Europe/Paris</timezone>
+        </lastModified>
+        <description></description>
+        <includeNewChannels>false</includeNewChannels>
+        <enabledChannelIds>
+          <string>9d2c084d-bbd8-402c-a551-a2caa137b91e</string>
+          <string>e73dc40a-fc0f-460e-a9aa-aa1f830b16c1</string>
+        </enabledChannelIds>
+        <disabledChannelIds>
+          <string>8e44daa0-2590-4b0a-9c08-194863cbc6ee</string>
+          <string>278aafa7-fbd7-4053-a79f-f16078b7ef19</string>
+          <string>a8b0df40-de82-4462-9b22-8c3eb48d92be</string>
+          <string>41e48daa-3fbb-4f26-b5ee-3a3793d9b2ba</string>
+          <string>ad6a9979-1e5b-4a48-9ecb-83d28295fbc0</string>
+          <string>c1bc5c3f-92f6-4d7f-9cc2-9886761bfae0</string>
+          <string>4c1f7c6d-cb85-434e-902a-a3b86b4ea503</string>
+          <string>abd6b38a-c048-4c7e-a77f-d17ca13f024c</string>
+          <string>501fe75b-3421-4a86-9776-1971b3cf4b0b</string>
+          <string>e1c9eea6-aa05-4492-a01f-c7f867e7310f</string>
+          <string>b7cfd2ba-f3cf-4b7d-a6cb-cbd2768893c2</string>
+          <string>fcee1912-fa5b-47fa-9da4-d6a2148c8e4c</string>
+          <string>9f98ae0f-5a61-43d4-8d82-7086e0c1d148</string>
+          <string>6dcd6af9-7395-447e-b4d4-450752fe73a4</string>
+          <string>32c33267-b2b5-4dec-9f37-4e7ee3125dc6</string>
+          <string>b5703bf5-963d-47e0-a4db-bcbe1b82bb1b</string>
+          <string>792b1bc8-3942-4e57-a07c-3d4d5bdf2758</string>
+          <string>72b5a5ab-4725-4e7b-8f11-eebee8b07d38</string>
+          <string>4567857e-e670-4ed9-8f7e-8f49f66ab106</string>
+          <string>d550e3d4-ef58-4338-aa64-d6797cc98b53</string>
+        </disabledChannelIds>
+        <codeTemplates>
+          <codeTemplate version="3.5.1">
+            <id>23ea69f1-4b5d-4d2f-aba9-f9728bd34ad0</id>
+            <name>SelectLeastSentMessageByPunctuation</name>
+            <revision>41</revision>
+            <lastModified>
+              <time>1513595685036</time>
+              <timezone>Europe/Paris</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/**
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+function selectLeastSentMessageByPunctuation(dbConn, userId, messagesIdArray, messagesPunctuationArray, excludedMessagesIdArray) {
+
+	var days = [6,0,1,2,3,4,5];
+	var weekdayNumber = (new Date()).getDay();
+	daysQuantitySubstraction = days[weekdayNumber];
+	
+	//logger.info(&quot;Day: &quot; + weekdayNumber + &quot; and substraction: &quot; + daysQuantitySubstraction);
+
+	
+	var selectedMessageId;
+	var messageHasBeenSelected = false;
+	
+	var messagesAlreadySentId = [];
+	var messagesAlreadySentPunctuation = [];
+	var messagesAlreadySentCount = [];
+
+	
+	var messagesIdWithoutExcludedArray = [];
+	var messagesPunctuationWithoutExcludedArray = [];
+
+	var numCountAllowed = 0;
+	// logger.info(&quot;Los mensajes excluidos son: &quot; + excludedMessagesIdArray);
+	// Instantiation: removes exluded messages
+	for (var i = 0 ; i &lt; messagesIdArray.length ; i++){
+		
+		if(excludedMessagesIdArray.indexOf(messagesIdArray[i]) == -1){
+			messagesIdWithoutExcludedArray.push(messagesIdArray[i]);
+			messagesPunctuationWithoutExcludedArray.push(messagesPunctuationArray[i]);
+		}	
+	}
+	if(messagesIdWithoutExcludedArray.length == 0){
+		return 0;
+	}
+	
+	//logger.info(&quot;Cantidad de mensajes disponibles al excluir los indicados: &quot; + messagesIdWithoutExcludedArray.length);
+	//logger.info(&quot;puntuaciones disponibles al excluir los indicados: &quot; + messagesPunctuationWithoutExcludedArray);
+	do{
+		if(messagesIdWithoutExcludedArray.length != 0){ 
+			
+			selectedIndex = messagesPunctuationWithoutExcludedArray.indexOf(Math.max.apply(null,messagesPunctuationWithoutExcludedArray));
+			var candidateMessageId = messagesIdWithoutExcludedArray[selectedIndex];
+		
+			getAllSentMessagesWithIdMessageToUserQuery = &quot;SELECT * FROM sentmessage WHERE  user_id = ? AND message_id = ?  AND received_date IS NOT NULL&quot;;
+			
+			getAllSentMessagesWithIdMessageToUserResult = dbConn.executeCachedQuery(getAllSentMessagesWithIdMessageToUserQuery, [userId, candidateMessageId]);
+
+			getIfMessageHasBeenSentThisWeekQuery = &quot;SELECT * FROM sentmessage WHERE  user_id = ? AND message_id = ?  AND sent_date &gt; (current_date - (interval &apos;1d&apos;)*?)&quot;;
+			getIfMessageHasBeenSentThisWeekResult = dbConn.executeCachedQuery(getIfMessageHasBeenSentThisWeekQuery, [userId, candidateMessageId, daysQuantitySubstraction]);
+
+			var hasBeenTriedToSendPreviouslyThisWeek = !(getIfMessageHasBeenSentThisWeekResult.size() == 0);
+			
+			/*if(hasBeenTriedToSendPreviouslyThisWeek){
+				logger.info(&quot;El mensaje con id &quot; + candidateMessageId + &quot; se ha mandado esta semana &quot; + getIfMessageHasBeenSentThisWeekResult.size() + &quot; veces.&quot;)
+			}
+			*/	
+			var countWithTotalPenalization = hasBeenTriedToSendPreviouslyThisWeek ? 3 : getAllSentMessagesWithIdMessageToUserResult.size(); // It&apos;s prohibited to send this message if this has been tried to send this week
+			
+			if(countWithTotalPenalization == 0){
+				//logger.info(&quot;El mensaje con id = &quot; + candidateMessageId + &quot; no ha sido enviado aun y tiene buena valoracion&quot;)
+				//logger.info(&quot;Mensajes que quedaban aun:&quot; + messagesIdWithoutExcludedArray);
+				selectedMessageId = candidateMessageId;
+				messageHasBeenSelected = true;
+			}else{
+				//logger.info(&quot;El mensaje con id = &quot; + candidateMessageId + &quot; aunque tiene buena valoracion ha sido mandado mas veces&quot;)
+				messagesAlreadySentId.push(candidateMessageId);
+				messagesAlreadySentPunctuation.push(messagesPunctuationWithoutExcludedArray[selectedIndex]);
+				messagesAlreadySentCount.push(countWithTotalPenalization);
+
+				messagesIdWithoutExcludedArray.splice(selectedIndex, 1);
+				messagesPunctuationWithoutExcludedArray.splice(selectedIndex, 1);
+			}
+
+		} else{ // All messages have been sent once at least. In this case, we have already calculated the number of sendings of each message
+			numCountAllowed = numCountAllowed  + 1;
+
+			if(numCountAllowed == 3){
+				//logger.info(&quot;Todos los mensajes posibles para el usuario con id = &quot; + userId + &quot; se han mandado mas de dos veces. No se envia ninguno.&quot;); 
+				return 0;
+			}
+			
+			selectedIndex = messagesAlreadySentCount.indexOf(numCountAllowed);
+			
+			if(selectedIndex != -1){
+				selectedMessageId = messagesAlreadySentId[selectedIndex];
+				messageHasBeenSelected = true;
+				// logger.info(&quot;Se la elegido el mensaje con id&quot; + selectedMessageId + &quot; que se ha mandado ya &quot; + numCountAllowed + &quot; veces.&quot;);
+			}
+		}
+		
+	} while(!messageHasBeenSelected);
+
+	// logger.info(&quot;Las veces enviados los mensajes son: &quot; + messagesAlreadySentCount);
+	
+	return selectedMessageId;
+}</code>
+            </properties>
+          </codeTemplate>
+          <codeTemplate version="3.5.1">
+            <id>e6eab6c1-4cb7-4feb-bd6c-5ea3d415e732</id>
+            <name>SelectLeastSentMessageRandomly</name>
+            <revision>30</revision>
+            <lastModified>
+              <time>1506601019051</time>
+              <timezone>Europe/Paris</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/**
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+function selectLeastSentMessageRandomly(dbConn, userId, messagesIdArray, excludedMessagesIdArray) {
+
+	var days = [6,0,1,2,3,4,5];
+	var weekdayNumber = (new Date()).getDay();
+	daysQuantitySubstraction = days[weekdayNumber];
+
+	// logger.info(&quot;Day: &quot; + weekdayNumber + &quot; and substraction: &quot; + daysQuantitySubstraction);
+	
+	var selectedMessageId;
+	var messageHasBeenSelected = false;
+	
+	var messagesAlreadySentId = [];
+	var messagesAlreadySentCount = [];
+
+	var messagesIdWithoutExcludedArray;
+
+	do{
+		messagesIdWithoutExcludedArray = messagesIdArray.filter(function(val) { return (excludedMessagesIdArray.concat(messagesAlreadySentId)).indexOf(val) == -1;});
+
+		//logger.info(&quot;Cantidad de mensajes disponibles al excluir los indicados: &quot; + messagesIdWithoutExcludedArray.length);
+		
+		if(messagesIdWithoutExcludedArray.length != 0){ 
+			
+		
+			randomIndex = Math.floor(Math.random() * messagesIdWithoutExcludedArray.length);
+			randomMessageId = messagesIdWithoutExcludedArray[randomIndex];
+		
+			getAllSentMessagesWithIdMessageToUserQuery = &quot;SELECT * FROM sentmessage WHERE  user_id = ? AND message_id = ?  AND received_date IS NOT NULL&quot;;
+			getAllSentMessagesWithIdMessageToUserResult = dbConn.executeCachedQuery(getAllSentMessagesWithIdMessageToUserQuery, [userId, randomMessageId]);
+
+			getIfMessageHasBeenSentThisWeekQuery = &quot;SELECT * FROM sentmessage WHERE  user_id = ? AND message_id = ?  AND sent_date &gt; (current_date - (interval &apos;1d&apos;)*?)&quot;;
+			getIfMessageHasBeenSentThisWeekResult = dbConn.executeCachedQuery(getIfMessageHasBeenSentThisWeekQuery, [userId, randomMessageId, daysQuantitySubstraction]);
+
+			var hasBeenTriedToSendPreviouslyThisWeek = !(getIfMessageHasBeenSentThisWeekResult.size() == 0);
+			
+			/*if(hasBeenTriedToSendPreviouslyThisWeek){
+				logger.info(&quot;El mensaje con id &quot; + randomMessageId + &quot; se ha mandado esta semana &quot; + getIfMessageHasBeenSentThisWeekResult.size() + &quot; veces.&quot;)
+			}*/
+				
+			var countWithTotalPenalization = hasBeenTriedToSendPreviouslyThisWeek ? 3 : getAllSentMessagesWithIdMessageToUserResult.size(); // It&apos;s prohibited to send this message if this has been tried to send this week
+			
+			if(countWithTotalPenalization == 0){
+				// logger.info(&quot;Se ha seleccionado el mensaje con id: &quot; + randomMessageId + &quot;de forma aleatoria y porque no ha sido mandado aun al usuario con id: &quot; +  userId);
+				selectedMessageId = randomMessageId;
+				messageHasBeenSelected = true;
+			}else{
+				// logger.info(&quot;El mensaje con id: &quot; + randomMessageId + &quot;ya se ha mandado &quot; + getAllSentMessagesWithIdMessageToUserResult.size() + &quot; veces al user con id &quot; + userId);
+				messagesAlreadySentId = messagesAlreadySentId.concat([randomMessageId]);
+				messagesAlreadySentCount = messagesAlreadySentCount.concat([countWithTotalPenalization]);
+			}
+
+		} else{ // All messages have been sent once at least. In this case, we have already calculated the number of sendings of each message
+			// logger.info(&quot;Ya se han mandado todos los mensajes al menos una vez. Estas son las veces: &quot; + messagesAlreadySentCount);
+			
+			if(messagesAlreadySentId.length == 0){
+				return 0;
+			}
+			
+			var indexLeastSent = messagesAlreadySentCount.indexOf(Math.min.apply(null,messagesAlreadySentCount))
+
+			if(messagesAlreadySentCount[indexLeastSent] &gt;2){
+				//logger.info(&quot;Todos los mensajes posibles para el usuario con id = &quot; + userId + &quot; se han mandado mas de dos veces. No se envia ninguno.&quot;); 
+				return 0;
+			}
+			
+			
+			selectedMessageId = messagesAlreadySentId[indexLeastSent];
+			messageHasBeenSelected = true;
+			
+			// logger.info(&quot;Se ha elegido mandar el menos veces enviado, de id: &quot; + selectedMessageId +  &quot;recibido ya por el ususario &quot; + messagesAlreadySentCount[indexLeastSent] + &quot; veces.&quot;);
+		}
+		
+		
+	} while(!messageHasBeenSelected);
+	//logger.info(&quot;Las veces enviados los mensajes son: &quot; + messagesAlreadySentCount);
+	
+	return selectedMessageId;
+}</code>
+            </properties>
+          </codeTemplate>
+        </codeTemplates>
+      </codeTemplateLibrary>
+    </codeTemplateLibraries>
+  </exportData>
+</channel>

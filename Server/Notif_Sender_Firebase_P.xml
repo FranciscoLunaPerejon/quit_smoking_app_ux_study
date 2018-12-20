@@ -1,0 +1,572 @@
+<channel version="3.5.1">
+  <id>4567857e-e670-4ed9-8f7e-8f49f66ab106</id>
+  <nextMetaDataId>5</nextMetaDataId>
+  <name>Notif_Sender_Firebase_P</name>
+  <description></description>
+  <revision>29</revision>
+  <sourceConnector version="3.5.1">
+    <metaDataId>0</metaDataId>
+    <name>sourceConnector</name>
+    <properties class="com.mirth.connect.connectors.jdbc.DatabaseReceiverProperties" version="3.5.1">
+      <pluginProperties/>
+      <pollConnectorProperties version="3.5.1">
+        <pollingType>INTERVAL</pollingType>
+        <pollOnStart>false</pollOnStart>
+        <pollingFrequency>300000</pollingFrequency>
+        <pollingHour>0</pollingHour>
+        <pollingMinute>0</pollingMinute>
+        <cronJobs/>
+        <pollConnectorPropertiesAdvanced>
+          <weekly>true</weekly>
+          <inactiveDays>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+            <boolean>false</boolean>
+          </inactiveDays>
+          <dayOfMonth>1</dayOfMonth>
+          <allDay>true</allDay>
+          <startingHour>8</startingHour>
+          <startingMinute>0</startingMinute>
+          <endingHour>17</endingHour>
+          <endingMinute>0</endingMinute>
+        </pollConnectorPropertiesAdvanced>
+      </pollConnectorProperties>
+      <sourceConnectorProperties version="3.5.1">
+        <responseVariable>None</responseVariable>
+        <respondAfterProcessing>true</respondAfterProcessing>
+        <processBatch>false</processBatch>
+        <firstResponse>false</firstResponse>
+        <processingThreads>1</processingThreads>
+        <resourceIds class="linked-hash-map">
+          <entry>
+            <string>Default Resource</string>
+            <string>[Default Resource]</string>
+          </entry>
+        </resourceIds>
+        <queueBufferSize>1000</queueBufferSize>
+      </sourceConnectorProperties>
+      <driver>org.postgresql.Driver</driver>
+      <url>jdbc:postgresql://localhost:5432/NameOfDatabaseEstablished</url>
+      <username>introducedatabaseusername</username>
+      <password>admin</password>
+      <select>var dbConn;
+
+try {
+	dbConn = DatabaseConnectionFactory.createDatabaseConnection(&apos;org.postgresql.Driver&apos;,&apos;jdbc:postgresql://localhost:5432/NameOfDatabaseEstablished&apos;,&apos;introducedatabaseusername&apos;,&apos;introducepasswordfordatabaseuser&apos;);
+	var result = dbConn.executeCachedQuery(&quot;SELECT sentmessage.id AS sentmessage_id, sentmessage.message_id AS sentmessage_message_id, &quot; 
+	+ &quot;sentmessage.user_id AS sentmessage_user_id, sentmessage.sent_date AS sentmessage_sent_date FROM sentmessage &quot; 
+	+ &quot;WHERE sentmessage.sent_date &gt;= CURRENT_TIMESTAMP - (interval &apos;1s&apos;)*300&quot;
+	+ &quot;AND sentmessage.sent_date &lt; CURRENT_TIMESTAMP &quot;);
+/*
+	if(result.size()&lt;=0){
+		logger.info(&quot;There aren&apos;t messages to be sent&quot;)
+	}
+	else{
+		logger.info(&quot;There are messages to be sent. Quantity: &quot; + result.size());
+	}
+	// You may access this result below with $(&apos;&lt;column_name&gt;&apos;)
+*/
+	return result;
+} finally {
+	if (dbConn) { 
+		dbConn.close();
+	}
+}
+
+</select>
+      <update>// This update script will be executed once for every result returned from the above query.
+var dbConn;
+
+try {
+	dbConn = DatabaseConnectionFactory.createDatabaseConnection(&apos;org.postgresql.Driver&apos;,&apos;jdbc:postgresql://localhost:5432/NameOfDatabaseEstablished&apos;,&apos;introducedatabaseusername&apos;,&apos;introducepasswordfordatabaseuser&apos;);
+
+	var result = dbConn.executeUpdate(&quot;INSERT INTO sentmessage (type_id::INTEGER, message_id::INTEGER, user_id::INTEGER) VALUES (?, ?, ?)&quot; [&quot;1&quot;,$(&apos;message_id&apos;), &quot;9&quot;]);
+	
+} finally {
+	if (dbConn) { 
+		dbConn.close();
+	}
+}</update>
+      <useScript>true</useScript>
+      <aggregateResults>false</aggregateResults>
+      <cacheResults>true</cacheResults>
+      <keepConnectionOpen>true</keepConnectionOpen>
+      <updateMode>1</updateMode>
+      <retryCount>3</retryCount>
+      <retryInterval>10000</retryInterval>
+      <fetchSize>1000</fetchSize>
+      <encoding>UTF-8</encoding>
+    </properties>
+    <transformer version="3.5.1">
+      <elements>
+        <com.mirth.connect.plugins.mapper.MapperStep>
+          <name>sentMessageId</name>
+          <sequenceNumber>0</sequenceNumber>
+          <variable>sentMessageId</variable>
+          <mapping>msg[&apos;sentmessage_id&apos;].toString()</mapping>
+          <defaultValue></defaultValue>
+          <replacements/>
+          <scope>CHANNEL</scope>
+        </com.mirth.connect.plugins.mapper.MapperStep>
+        <com.mirth.connect.plugins.mapper.MapperStep>
+          <name>userId</name>
+          <sequenceNumber>1</sequenceNumber>
+          <variable>userId</variable>
+          <mapping>msg[&apos;sentmessage_user_id&apos;].toString()</mapping>
+          <defaultValue></defaultValue>
+          <replacements/>
+          <scope>CHANNEL</scope>
+        </com.mirth.connect.plugins.mapper.MapperStep>
+        <com.mirth.connect.plugins.mapper.MapperStep>
+          <name>selectedMessageId</name>
+          <sequenceNumber>2</sequenceNumber>
+          <variable>selectedMessageId</variable>
+          <mapping>msg[&apos;sentmessage_message_id&apos;].toString()</mapping>
+          <defaultValue></defaultValue>
+          <replacements/>
+          <scope>CHANNEL</scope>
+        </com.mirth.connect.plugins.mapper.MapperStep>
+      </elements>
+      <inboundTemplate encoding="base64">PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9Im5vIj8+DQo8
+cmVzdWx0Pg0KICAgIDxzZW50bWVzc2FnZV9pZD52YWx1ZTwvc2VudG1lc3NhZ2VfaWQ+DQogICAg
+PHNlbnRtZXNzYWdlX21lc3NhZ2VfaWQ+dmFsdWU8L3NlbnRtZXNzYWdlX21lc3NhZ2VfaWQ+DQog
+ICAgPHNlbnRtZXNzYWdlX3VzZXJfaWQ+dmFsdWU8L3NlbnRtZXNzYWdlX3VzZXJfaWQ+DQogICAg
+PHNlbnRtZXNzYWdlX3NlbnRfZGF0ZT52YWx1ZTwvc2VudG1lc3NhZ2Vfc2VudF9kYXRlPg0KPC9y
+ZXN1bHQ+DQo=</inboundTemplate>
+      <outboundTemplate encoding="base64"></outboundTemplate>
+      <inboundDataType>XML</inboundDataType>
+      <outboundDataType>RAW</outboundDataType>
+      <inboundProperties class="com.mirth.connect.plugins.datatypes.xml.XMLDataTypeProperties" version="3.5.1">
+        <serializationProperties class="com.mirth.connect.plugins.datatypes.xml.XMLSerializationProperties" version="3.5.1">
+          <stripNamespaces>true</stripNamespaces>
+        </serializationProperties>
+        <batchProperties class="com.mirth.connect.plugins.datatypes.xml.XMLBatchProperties" version="3.5.1">
+          <splitType>Element_Name</splitType>
+          <elementName></elementName>
+          <level>1</level>
+          <query></query>
+          <batchScript></batchScript>
+        </batchProperties>
+      </inboundProperties>
+      <outboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="3.5.1">
+        <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="3.5.1">
+          <splitType>JavaScript</splitType>
+          <batchScript></batchScript>
+        </batchProperties>
+      </outboundProperties>
+    </transformer>
+    <filter version="3.5.1">
+      <elements/>
+    </filter>
+    <transportName>Database Reader</transportName>
+    <mode>SOURCE</mode>
+    <enabled>true</enabled>
+    <waitForPrevious>true</waitForPrevious>
+  </sourceConnector>
+  <destinationConnectors>
+    <connector version="3.5.1">
+      <metaDataId>3</metaDataId>
+      <name>SendToFirebase</name>
+      <properties class="com.mirth.connect.connectors.js.JavaScriptDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>false</queueEnabled>
+          <sendFirst>false</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>0</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>1</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <script>var dbConn;
+var tokenFCM;
+
+const METADATA_CONTROL_GROUP_CODE = &quot;0&quot;;
+const METADATA_INTERVENTION_GROUP_CODE = &quot;1&quot;;
+
+var serverToken = &quot;AAAACSYLo38:APA91bHGw_vWj1yWGBSJRZKaZisWHdMES0_STvyldgHn2ZgE-06CXgtfBNPEBm0DHN1QSdUR2ftOKQED_YS39UbpIn5IJQwg3EFdY0Pg4wDogSVEbZt3hzWhmqXz8ptXdAG2vZMeqoQu&quot;;
+
+try {
+	dbConn = DatabaseConnectionFactory.createDatabaseConnection(&apos;org.postgresql.Driver&apos;,&apos;jdbc:postgresql://localhost:5432/NameOfDatabaseEstablished&apos;,&apos;introducedatabaseusername&apos;,&apos;introducepasswordfordatabaseuser&apos;);
+	
+	var userInformationRow = dbConn.executeCachedQuery(&quot;SELECT fcm_token,clinical_group, gender,nickname, max_sent_any_message FROM useraccount,personaldata WHERE useraccount.id = personaldata.user_id AND useraccount.id = &quot; + $(&apos;userId&apos;));
+	var messageInformationRow = dbConn.executeCachedQuery(&quot;SELECT message_content, message_type FROM message WHERE id = &quot; + $(&apos;selectedMessageId&apos;));
+
+
+if(userInformationRow.next()){
+	tokenFCM = userInformationRow.getString(1);
+	userGender = userInformationRow.getString(3);
+	nickname = userInformationRow.getString(4);
+	
+	if(messageInformationRow.next()){
+		
+		var messageText = String(messageInformationRow.getString(1)).valueOf();
+
+		var sentMessageType = String(messageInformationRow.getInt(2)).valueOf();
+		//logger.info(&quot;El texto seleccionado sin cambiar es: &quot; + messageText);
+
+		//logger.info(messageText + &quot;, type:&quot; +  sentMessageType)
+		
+		var completeMessage;
+		var messageTag;
+		if(sentMessageType == 2){ // Casual question, that is, follow up question
+			logger.info(&quot;follow up case&quot;)
+			var typeTagResult = dbConn.executeCachedQuery(&quot;SELECT type_description FROM messagetype WHERE id = &quot;+ sentMessageType);
+			if(typeTagResult.next()){
+				messageTag= String(typeTagResult.getString(1)).valueOf();
+			}
+			completeMessage = messageText;
+			
+		}else{ // A motivational message, for the moment (maybe in the future it is necessary consider the new type &quot;information messages&quot;
+
+			var completeMessage = &quot;&quot;;
+			
+			// Message processing 
+			
+			// Select one message depending on gender
+			var messageWithGenderSelected = &quot;&quot;;
+			if(messageText.indexOf(&quot;&lt;ggg&gt;&quot;) != -1){
+				var arrayTextDividedByGender = messageText.split(&quot;&lt;ggg&gt;&quot;);
+				if(userGender == &quot;f&quot;){
+					messageWithGenderSelected = arrayTextDividedByGender[1];
+				}else{
+					messageWithGenderSelected = arrayTextDividedByGender[0];
+				}
+				//logger.info(&quot;Tiene distincion de genero y el genero era: &quot; + userGender);
+			}else{
+				//logger.info(&quot;No tiene distincion de genero&quot;);
+				messageWithGenderSelected = messageText;
+			}
+
+			//logger.info(&quot;El mensaje tras seleccionar el genero es: &quot; + messageWithGenderSelected);
+			// Replace &lt;Name&gt; with the user name in personal data
+			var regExpName = /&lt;(.+?)&gt;/ig;
+			processedMessage = messageWithGenderSelected.replace(regExpName,String(nickname).valueOf());
+			// logger.info(&quot;El texto con el nombre del usuario puesto es: &quot; + processedMessage);
+			
+			//Adding metadata
+			
+			var messageMetadata = &quot;&quot;;
+
+			var groupCodeMetadata = &quot;&quot;;
+			var clinicalGroup = userInformationRow.getString(2);
+			if(clinicalGroup == &quot;PATIENT1&quot; || clinicalGroup == &quot;PATIENT2&quot; || clinicalGroup == &quot;A&quot;){
+				groupCodeMetadata = &quot;//&quot; + METADATA_INTERVENTION_GROUP_CODE;
+			}else{
+				groupCodeMetadata = &quot;//&quot; + METADATA_CONTROL_GROUP_CODE;
+			}
+
+			var messageRepeatedMetadata = &quot;&quot;;
+			
+			var userLanguageIdRow= dbConn.executeCachedQuery(&quot;SELECT language_id FROM userpreferences WHERE user_id = &quot; + $(&apos;userId&apos;));
+			var userLanguageId;
+			if (userLanguageIdRow.next()){
+				
+				userLanguageId = userLanguageIdRow.getInt(1); 
+
+				var maxSentAnyMessages = userInformationRow.getInt(5);
+				
+				var previousCorrectSendingsOfThisMessageToTheUserResult = dbConn.executeCachedQuery(&quot;SELECT COUNT(*) FROM sentmessage WHERE message_id = &quot;+ $(&apos;selectedMessageId&apos;)+&quot; AND received_date IS NOT NULL AND user_id = &quot;+ $(&apos;userId&apos;));
+				var previousCorrectSendingsOfThisMessageToTheUser;
+				
+				if(previousCorrectSendingsOfThisMessageToTheUserResult.next()){
+					previousCorrectSendingsOfThisMessageToTheUser= previousCorrectSendingsOfThisMessageToTheUserResult.getInt(1);
+					if(previousCorrectSendingsOfThisMessageToTheUser == 0 || maxSentAnyMessages &gt; 2 ){
+						//Do nothing, keep working
+					}else if (previousCorrectSendingsOfThisMessageToTheUser==1 &amp;&amp; maxSentAnyMessages &lt; 1){
+						var messageSentPreviouslyOnceRow= dbConn.executeCachedQuery(&quot;SELECT repeated_once FROM repeatedmessagetext WHERE language_id= ?&quot;, [userLanguageId]); 
+						var messageSentPreviouslyOnce = &quot;&quot;;
+						if(messageSentPreviouslyOnceRow.next()){
+							messageSentPreviouslyOnce = &quot;//&quot; + messageSentPreviouslyOnceRow.getString(1);
+						}
+						messageRepeatedMetadata = messageSentPreviouslyOnce;
+						dbConn.executeUpdate(&quot;UPDATE useraccount SET (max_sent_any_message) = (?) WHERE id =&quot; + $(&apos;userId&apos;), [1])
+					}else if(previousCorrectSendingsOfThisMessageToTheUser==2 &amp;&amp; maxSentAnyMessages &lt; 2){
+						var messageSentPreviouslyTwiceRow= dbConn.executeCachedQuery(&quot;SELECT repeated_twice FROM repeatedmessagetext WHERE language_id= ?&quot;, [userLanguageId]); 
+						var messageSentPreviouslyTwice = &quot;&quot;;
+						if(messageSentPreviouslyTwiceRow.next()){
+							messageSentPreviouslyTwice = &quot;//&quot; + messageSentPreviouslyTwiceRow.getString(1);
+						}
+						messageRepeatedMetadata = messageSentPreviouslyTwice;
+						dbConn.executeUpdate(&quot;UPDATE useraccount SET (max_sent_any_message) = (?) WHERE id =&quot; + $(&apos;userId&apos;), [2])
+					}else{
+						//Do nothing
+					}
+				}
+			}
+
+			completeMessage = processedMessage + groupCodeMetadata + messageRepeatedMetadata;
+			
+			messageTag = &quot;Motivational Message&quot;
+
+		}
+
+		
+		
+		//messageTag = &quot;testMessage&quot;;
+		JSONmessage = &apos;{&quot;to&quot; : &quot;&apos; + tokenFCM + &apos;&quot;,&apos; 
+					+ &apos; &quot;content_available&quot; : true,&apos;
+					+ &apos; &quot;alert&quot; : { &quot;title&quot; : &quot;QuitAndReturn&quot;, &quot;subtitle&quot; : &quot;&quot;, &quot;body&quot; : &quot;&apos;+ $(&apos;sentMessageId&apos;) + &apos;&quot;, },&apos;
+    					+ &apos; &quot;data&quot; : {&apos;
+    					+ &apos; &quot;messageTag&quot; : &quot;&apos;+ messageTag + &apos;&quot;,&apos; 
+    					+ &apos; &quot;messageBody&quot; : &quot;&apos;+ completeMessage + &apos;&quot;,&apos;
+    					+ &apos; &quot;messageId&quot; : &quot;&apos;+ $(&apos;sentMessageId&apos;) + &apos;&quot;,&apos;
+    					+ &apos;}&apos;
+    					+ &apos;}&apos;;
+
+    		logger.info(JSONmessage);
+		
+		// Create url object
+		var url = new java.net.URL(&apos;https://fcm.googleapis.com/fcm/send&apos;);
+		// Open connection to url
+		var conn = url.openConnection();
+
+		conn.setDoOutput(true);
+		conn.setDoInput(true);
+		conn.setRequestMethod(&quot;POST&quot;);
+		conn.setRequestProperty(&quot;Content-type&quot;, &quot;application/json&quot;);
+		conn.setRequestProperty(&quot;Authorization&quot;, &quot;key=&quot; + serverToken)
+
+		// Send request
+		var outStream = conn.getOutputStream();
+		var outWriter = new java.io.OutputStreamWriter(outStream, &quot;UTF-8&quot;);
+		outWriter.write(JSONmessage);
+		outWriter.close();
+
+		// Get response
+		var inputStream = conn.getInputStream();
+		var streamReader = new java.io.InputStreamReader(inputStream);
+		var respStream = new java.io.BufferedReader(streamReader);
+
+		//create variable to hold return data
+		var buffer = new java.lang.StringBuffer();
+		var line = null;
+		while ((line = respStream.readLine()) != null) {
+		buffer.append(line + &apos;n&apos;);
+		}
+		respStream.close();
+
+		// Store response in channelMap
+		var response = buffer.toString();
+		channelMap.put(&apos;response&apos;, response);
+		logger.info(response)
+	}
+} 
+
+}catch(e){
+	logger.info(e);
+	channelMap.put(&apos;error&apos;, e);
+} finally {
+	if (dbConn) { 
+		dbConn.close();
+	}
+}
+
+</script>
+      </properties>
+      <transformer version="3.5.1">
+        <elements/>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <outboundTemplate encoding="base64"></outboundTemplate>
+        <inboundDataType>RAW</inboundDataType>
+        <outboundDataType>RAW</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements/>
+        <inboundDataType>RAW</inboundDataType>
+        <outboundDataType>RAW</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements/>
+      </filter>
+      <transportName>JavaScript Writer</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+    <connector version="3.5.1">
+      <metaDataId>4</metaDataId>
+      <name>WriteMessageTextInAFile</name>
+      <properties class="com.mirth.connect.connectors.file.FileDispatcherProperties" version="3.5.1">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.1">
+          <queueEnabled>false</queueEnabled>
+          <sendFirst>false</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>0</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>1</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <scheme>FILE</scheme>
+        <host>/</host>
+        <outputPattern>NotifSenderFirebaseResponse</outputPattern>
+        <anonymous>true</anonymous>
+        <username>anonymous</username>
+        <password>anonymous</password>
+        <timeout>10000</timeout>
+        <secure>true</secure>
+        <passive>true</passive>
+        <validateConnection>true</validateConnection>
+        <outputAppend>true</outputAppend>
+        <errorOnExists>false</errorOnExists>
+        <temporary>false</temporary>
+        <binary>false</binary>
+        <charsetEncoding>UTF-8</charsetEncoding>
+        <template>---------
+${DATE}: ${response}
+</template>
+      </properties>
+      <transformer version="3.5.1">
+        <elements/>
+        <inboundDataType>RAW</inboundDataType>
+        <outboundDataType>RAW</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.1">
+        <elements/>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <outboundTemplate encoding="base64"></outboundTemplate>
+        <inboundDataType>RAW</inboundDataType>
+        <outboundDataType>RAW</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="3.5.1">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="3.5.1">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.1">
+        <elements/>
+      </filter>
+      <transportName>File Writer</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+  </destinationConnectors>
+  <preprocessingScript>// Modify the message variable below to pre process data
+return message;</preprocessingScript>
+  <postprocessingScript>// This script executes once after a message has been processed
+// Responses returned from here will be stored as &quot;Postprocessor&quot; in the response map
+return;</postprocessingScript>
+  <deployScript>// This script executes once when the channel is deployed
+// You only have access to the globalMap and globalChannelMap here to persist data
+return;</deployScript>
+  <undeployScript>// This script executes once when the channel is undeployed
+// You only have access to the globalMap and globalChannelMap here to persist data
+return;</undeployScript>
+  <properties version="3.5.1">
+    <clearGlobalChannelMap>true</clearGlobalChannelMap>
+    <messageStorageMode>PRODUCTION</messageStorageMode>
+    <encryptData>false</encryptData>
+    <removeContentOnCompletion>false</removeContentOnCompletion>
+    <removeOnlyFilteredOnCompletion>false</removeOnlyFilteredOnCompletion>
+    <removeAttachmentsOnCompletion>false</removeAttachmentsOnCompletion>
+    <initialState>STARTED</initialState>
+    <storeAttachments>false</storeAttachments>
+    <metaDataColumns>
+      <metaDataColumn>
+        <name>SOURCE</name>
+        <type>STRING</type>
+        <mappingName>mirth_source</mappingName>
+      </metaDataColumn>
+      <metaDataColumn>
+        <name>TYPE</name>
+        <type>STRING</type>
+        <mappingName>mirth_type</mappingName>
+      </metaDataColumn>
+    </metaDataColumns>
+    <attachmentProperties version="3.5.1">
+      <type>None</type>
+      <properties/>
+    </attachmentProperties>
+    <resourceIds class="linked-hash-map">
+      <entry>
+        <string>Default Resource</string>
+        <string>[Default Resource]</string>
+      </entry>
+    </resourceIds>
+  </properties>
+  <exportData>
+    <metadata>
+      <enabled>true</enabled>
+      <lastModified>
+        <time>1530106825867</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <pruningSettings>
+        <archiveEnabled>true</archiveEnabled>
+      </pruningSettings>
+    </metadata>
+    <codeTemplateLibraries/>
+  </exportData>
+</channel>

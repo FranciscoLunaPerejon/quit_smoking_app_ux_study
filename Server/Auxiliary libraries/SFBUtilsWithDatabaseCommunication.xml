@@ -1,0 +1,268 @@
+<codeTemplateLibrary version="3.5.1">
+  <id>e05a690f-3a75-4949-a168-7e5bda94bb65</id>
+  <name>SFBUtilsWithDatabaseCommunication</name>
+  <revision>9</revision>
+  <lastModified>
+    <time>1514138031869</time>
+    <timezone>Europe/Paris</timezone>
+  </lastModified>
+  <description></description>
+  <includeNewChannels>false</includeNewChannels>
+  <enabledChannelIds>
+    <string>9d2c084d-bbd8-402c-a551-a2caa137b91e</string>
+    <string>e73dc40a-fc0f-460e-a9aa-aa1f830b16c1</string>
+  </enabledChannelIds>
+  <disabledChannelIds>
+    <string>8e44daa0-2590-4b0a-9c08-194863cbc6ee</string>
+    <string>278aafa7-fbd7-4053-a79f-f16078b7ef19</string>
+    <string>34ed1b50-f05a-4157-8bce-89efa46b3397</string>
+    <string>41e48daa-3fbb-4f26-b5ee-3a3793d9b2ba</string>
+    <string>c1bc5c3f-92f6-4d7f-9cc2-9886761bfae0</string>
+    <string>abd6b38a-c048-4c7e-a77f-d17ca13f024c</string>
+    <string>501fe75b-3421-4a86-9776-1971b3cf4b0b</string>
+    <string>4f212078-ec94-4006-b310-5253422f24d5</string>
+    <string>a51aafce-d8a7-4f41-a4e4-be73d285fd86</string>
+    <string>b7cfd2ba-f3cf-4b7d-a6cb-cbd2768893c2</string>
+    <string>fcee1912-fa5b-47fa-9da4-d6a2148c8e4c</string>
+    <string>9f98ae0f-5a61-43d4-8d82-7086e0c1d148</string>
+    <string>6dcd6af9-7395-447e-b4d4-450752fe73a4</string>
+    <string>32c33267-b2b5-4dec-9f37-4e7ee3125dc6</string>
+    <string>792b1bc8-3942-4e57-a07c-3d4d5bdf2758</string>
+    <string>72b5a5ab-4725-4e7b-8f11-eebee8b07d38</string>
+    <string>d550e3d4-ef58-4338-aa64-d6797cc98b53</string>
+    <string>77ee46e5-03d8-4eb8-8dec-00d62d9477d0</string>
+    <string>4567857e-e670-4ed9-8f7e-8f49f66ab106</string>
+    <string>078681bf-9671-403e-b89b-daaee98a9a59</string>
+  </disabledChannelIds>
+  <codeTemplates>
+    <codeTemplate version="3.5.1">
+      <id>23ea69f1-4b5d-4d2f-aba9-f9728bd34ad0</id>
+      <name>SelectLeastSentMessageByPunctuation</name>
+      <revision>41</revision>
+      <lastModified>
+        <time>1513595685036</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <contextSet>
+        <delegate>
+          <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+          <contextType>DESTINATION_DISPATCHER</contextType>
+          <contextType>SOURCE_RECEIVER</contextType>
+          <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+          <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+        </delegate>
+      </contextSet>
+      <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+        <type>FUNCTION</type>
+        <code>/**
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+function selectLeastSentMessageByPunctuation(dbConn, userId, messagesIdArray, messagesPunctuationArray, excludedMessagesIdArray) {
+
+	var days = [6,0,1,2,3,4,5];
+	var weekdayNumber = (new Date()).getDay();
+	daysQuantitySubstraction = days[weekdayNumber];
+	
+	//logger.info(&quot;Day: &quot; + weekdayNumber + &quot; and substraction: &quot; + daysQuantitySubstraction);
+
+	
+	var selectedMessageId;
+	var messageHasBeenSelected = false;
+	
+	var messagesAlreadySentId = [];
+	var messagesAlreadySentPunctuation = [];
+	var messagesAlreadySentCount = [];
+
+	
+	var messagesIdWithoutExcludedArray = [];
+	var messagesPunctuationWithoutExcludedArray = [];
+
+	var numCountAllowed = 0;
+	// logger.info(&quot;Los mensajes excluidos son: &quot; + excludedMessagesIdArray);
+	// Instantiation: removes exluded messages
+	for (var i = 0 ; i &lt; messagesIdArray.length ; i++){
+		
+		if(excludedMessagesIdArray.indexOf(messagesIdArray[i]) == -1){
+			messagesIdWithoutExcludedArray.push(messagesIdArray[i]);
+			messagesPunctuationWithoutExcludedArray.push(messagesPunctuationArray[i]);
+		}	
+	}
+	if(messagesIdWithoutExcludedArray.length == 0){
+		return 0;
+	}
+	
+	//logger.info(&quot;Cantidad de mensajes disponibles al excluir los indicados: &quot; + messagesIdWithoutExcludedArray.length);
+	//logger.info(&quot;puntuaciones disponibles al excluir los indicados: &quot; + messagesPunctuationWithoutExcludedArray);
+	do{
+		if(messagesIdWithoutExcludedArray.length != 0){ 
+			
+			selectedIndex = messagesPunctuationWithoutExcludedArray.indexOf(Math.max.apply(null,messagesPunctuationWithoutExcludedArray));
+			var candidateMessageId = messagesIdWithoutExcludedArray[selectedIndex];
+		
+			getAllSentMessagesWithIdMessageToUserQuery = &quot;SELECT * FROM sentmessage WHERE  user_id = ? AND message_id = ?  AND received_date IS NOT NULL&quot;;
+			
+			getAllSentMessagesWithIdMessageToUserResult = dbConn.executeCachedQuery(getAllSentMessagesWithIdMessageToUserQuery, [userId, candidateMessageId]);
+
+			getIfMessageHasBeenSentThisWeekQuery = &quot;SELECT * FROM sentmessage WHERE  user_id = ? AND message_id = ?  AND sent_date &gt; (current_date - (interval &apos;1d&apos;)*?)&quot;;
+			getIfMessageHasBeenSentThisWeekResult = dbConn.executeCachedQuery(getIfMessageHasBeenSentThisWeekQuery, [userId, candidateMessageId, daysQuantitySubstraction]);
+
+			var hasBeenTriedToSendPreviouslyThisWeek = !(getIfMessageHasBeenSentThisWeekResult.size() == 0);
+			
+			/*if(hasBeenTriedToSendPreviouslyThisWeek){
+				logger.info(&quot;El mensaje con id &quot; + candidateMessageId + &quot; se ha mandado esta semana &quot; + getIfMessageHasBeenSentThisWeekResult.size() + &quot; veces.&quot;)
+			}
+			*/	
+			var countWithTotalPenalization = hasBeenTriedToSendPreviouslyThisWeek ? 3 : getAllSentMessagesWithIdMessageToUserResult.size(); // It&apos;s prohibited to send this message if this has been tried to send this week
+			
+			if(countWithTotalPenalization == 0){
+				//logger.info(&quot;El mensaje con id = &quot; + candidateMessageId + &quot; no ha sido enviado aun y tiene buena valoracion&quot;)
+				//logger.info(&quot;Mensajes que quedaban aun:&quot; + messagesIdWithoutExcludedArray);
+				selectedMessageId = candidateMessageId;
+				messageHasBeenSelected = true;
+			}else{
+				//logger.info(&quot;El mensaje con id = &quot; + candidateMessageId + &quot; aunque tiene buena valoracion ha sido mandado mas veces&quot;)
+				messagesAlreadySentId.push(candidateMessageId);
+				messagesAlreadySentPunctuation.push(messagesPunctuationWithoutExcludedArray[selectedIndex]);
+				messagesAlreadySentCount.push(countWithTotalPenalization);
+
+				messagesIdWithoutExcludedArray.splice(selectedIndex, 1);
+				messagesPunctuationWithoutExcludedArray.splice(selectedIndex, 1);
+			}
+
+		} else{ // All messages have been sent once at least. In this case, we have already calculated the number of sendings of each message
+			numCountAllowed = numCountAllowed  + 1;
+
+			if(numCountAllowed == 3){
+				//logger.info(&quot;Todos los mensajes posibles para el usuario con id = &quot; + userId + &quot; se han mandado mas de dos veces. No se envia ninguno.&quot;); 
+				return 0;
+			}
+			
+			selectedIndex = messagesAlreadySentCount.indexOf(numCountAllowed);
+			
+			if(selectedIndex != -1){
+				selectedMessageId = messagesAlreadySentId[selectedIndex];
+				messageHasBeenSelected = true;
+				// logger.info(&quot;Se la elegido el mensaje con id&quot; + selectedMessageId + &quot; que se ha mandado ya &quot; + numCountAllowed + &quot; veces.&quot;);
+			}
+		}
+		
+	} while(!messageHasBeenSelected);
+
+	// logger.info(&quot;Las veces enviados los mensajes son: &quot; + messagesAlreadySentCount);
+	
+	return selectedMessageId;
+}</code>
+      </properties>
+    </codeTemplate>
+    <codeTemplate version="3.5.1">
+      <id>e6eab6c1-4cb7-4feb-bd6c-5ea3d415e732</id>
+      <name>SelectLeastSentMessageRandomly</name>
+      <revision>30</revision>
+      <lastModified>
+        <time>1506601019051</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <contextSet>
+        <delegate>
+          <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+          <contextType>DESTINATION_DISPATCHER</contextType>
+          <contextType>SOURCE_RECEIVER</contextType>
+          <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+          <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+        </delegate>
+      </contextSet>
+      <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+        <type>FUNCTION</type>
+        <code>/**
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+function selectLeastSentMessageRandomly(dbConn, userId, messagesIdArray, excludedMessagesIdArray) {
+
+	var days = [6,0,1,2,3,4,5];
+	var weekdayNumber = (new Date()).getDay();
+	daysQuantitySubstraction = days[weekdayNumber];
+
+	// logger.info(&quot;Day: &quot; + weekdayNumber + &quot; and substraction: &quot; + daysQuantitySubstraction);
+	
+	var selectedMessageId;
+	var messageHasBeenSelected = false;
+	
+	var messagesAlreadySentId = [];
+	var messagesAlreadySentCount = [];
+
+	var messagesIdWithoutExcludedArray;
+
+	do{
+		messagesIdWithoutExcludedArray = messagesIdArray.filter(function(val) { return (excludedMessagesIdArray.concat(messagesAlreadySentId)).indexOf(val) == -1;});
+
+		//logger.info(&quot;Cantidad de mensajes disponibles al excluir los indicados: &quot; + messagesIdWithoutExcludedArray.length);
+		
+		if(messagesIdWithoutExcludedArray.length != 0){ 
+			
+		
+			randomIndex = Math.floor(Math.random() * messagesIdWithoutExcludedArray.length);
+			randomMessageId = messagesIdWithoutExcludedArray[randomIndex];
+		
+			getAllSentMessagesWithIdMessageToUserQuery = &quot;SELECT * FROM sentmessage WHERE  user_id = ? AND message_id = ?  AND received_date IS NOT NULL&quot;;
+			getAllSentMessagesWithIdMessageToUserResult = dbConn.executeCachedQuery(getAllSentMessagesWithIdMessageToUserQuery, [userId, randomMessageId]);
+
+			getIfMessageHasBeenSentThisWeekQuery = &quot;SELECT * FROM sentmessage WHERE  user_id = ? AND message_id = ?  AND sent_date &gt; (current_date - (interval &apos;1d&apos;)*?)&quot;;
+			getIfMessageHasBeenSentThisWeekResult = dbConn.executeCachedQuery(getIfMessageHasBeenSentThisWeekQuery, [userId, randomMessageId, daysQuantitySubstraction]);
+
+			var hasBeenTriedToSendPreviouslyThisWeek = !(getIfMessageHasBeenSentThisWeekResult.size() == 0);
+			
+			/*if(hasBeenTriedToSendPreviouslyThisWeek){
+				logger.info(&quot;El mensaje con id &quot; + randomMessageId + &quot; se ha mandado esta semana &quot; + getIfMessageHasBeenSentThisWeekResult.size() + &quot; veces.&quot;)
+			}*/
+				
+			var countWithTotalPenalization = hasBeenTriedToSendPreviouslyThisWeek ? 3 : getAllSentMessagesWithIdMessageToUserResult.size(); // It&apos;s prohibited to send this message if this has been tried to send this week
+			
+			if(countWithTotalPenalization == 0){
+				// logger.info(&quot;Se ha seleccionado el mensaje con id: &quot; + randomMessageId + &quot;de forma aleatoria y porque no ha sido mandado aun al usuario con id: &quot; +  userId);
+				selectedMessageId = randomMessageId;
+				messageHasBeenSelected = true;
+			}else{
+				// logger.info(&quot;El mensaje con id: &quot; + randomMessageId + &quot;ya se ha mandado &quot; + getAllSentMessagesWithIdMessageToUserResult.size() + &quot; veces al user con id &quot; + userId);
+				messagesAlreadySentId = messagesAlreadySentId.concat([randomMessageId]);
+				messagesAlreadySentCount = messagesAlreadySentCount.concat([countWithTotalPenalization]);
+			}
+
+		} else{ // All messages have been sent once at least. In this case, we have already calculated the number of sendings of each message
+			// logger.info(&quot;Ya se han mandado todos los mensajes al menos una vez. Estas son las veces: &quot; + messagesAlreadySentCount);
+			
+			if(messagesAlreadySentId.length == 0){
+				return 0;
+			}
+			
+			var indexLeastSent = messagesAlreadySentCount.indexOf(Math.min.apply(null,messagesAlreadySentCount))
+
+			if(messagesAlreadySentCount[indexLeastSent] &gt;2){
+				//logger.info(&quot;Todos los mensajes posibles para el usuario con id = &quot; + userId + &quot; se han mandado mas de dos veces. No se envia ninguno.&quot;); 
+				return 0;
+			}
+			
+			
+			selectedMessageId = messagesAlreadySentId[indexLeastSent];
+			messageHasBeenSelected = true;
+			
+			// logger.info(&quot;Se ha elegido mandar el menos veces enviado, de id: &quot; + selectedMessageId +  &quot;recibido ya por el ususario &quot; + messagesAlreadySentCount[indexLeastSent] + &quot; veces.&quot;);
+		}
+		
+		
+	} while(!messageHasBeenSelected);
+	//logger.info(&quot;Las veces enviados los mensajes son: &quot; + messagesAlreadySentCount);
+	
+	return selectedMessageId;
+}</code>
+      </properties>
+    </codeTemplate>
+  </codeTemplates>
+</codeTemplateLibrary>

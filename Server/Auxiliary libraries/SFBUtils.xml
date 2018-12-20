@@ -1,0 +1,835 @@
+<codeTemplateLibrary version="3.5.1">
+  <id>8d57521d-a8fc-458e-99cf-d56d9d741390</id>
+  <name>SFBUtils</name>
+  <revision>23</revision>
+  <lastModified>
+    <time>1514138031869</time>
+    <timezone>Europe/Paris</timezone>
+  </lastModified>
+  <description></description>
+  <includeNewChannels>false</includeNewChannels>
+  <enabledChannelIds>
+    <string>9d2c084d-bbd8-402c-a551-a2caa137b91e</string>
+    <string>e73dc40a-fc0f-460e-a9aa-aa1f830b16c1</string>
+    <string>d550e3d4-ef58-4338-aa64-d6797cc98b53</string>
+  </enabledChannelIds>
+  <disabledChannelIds>
+    <string>8e44daa0-2590-4b0a-9c08-194863cbc6ee</string>
+    <string>278aafa7-fbd7-4053-a79f-f16078b7ef19</string>
+    <string>34ed1b50-f05a-4157-8bce-89efa46b3397</string>
+    <string>41e48daa-3fbb-4f26-b5ee-3a3793d9b2ba</string>
+    <string>c1bc5c3f-92f6-4d7f-9cc2-9886761bfae0</string>
+    <string>abd6b38a-c048-4c7e-a77f-d17ca13f024c</string>
+    <string>501fe75b-3421-4a86-9776-1971b3cf4b0b</string>
+    <string>4f212078-ec94-4006-b310-5253422f24d5</string>
+    <string>a51aafce-d8a7-4f41-a4e4-be73d285fd86</string>
+    <string>b7cfd2ba-f3cf-4b7d-a6cb-cbd2768893c2</string>
+    <string>fcee1912-fa5b-47fa-9da4-d6a2148c8e4c</string>
+    <string>9f98ae0f-5a61-43d4-8d82-7086e0c1d148</string>
+    <string>6dcd6af9-7395-447e-b4d4-450752fe73a4</string>
+    <string>32c33267-b2b5-4dec-9f37-4e7ee3125dc6</string>
+    <string>792b1bc8-3942-4e57-a07c-3d4d5bdf2758</string>
+    <string>72b5a5ab-4725-4e7b-8f11-eebee8b07d38</string>
+    <string>77ee46e5-03d8-4eb8-8dec-00d62d9477d0</string>
+    <string>4567857e-e670-4ed9-8f7e-8f49f66ab106</string>
+    <string>078681bf-9671-403e-b89b-daaee98a9a59</string>
+  </disabledChannelIds>
+  <codeTemplates>
+    <codeTemplate version="3.5.1">
+      <id>027142be-44da-41c5-8a9a-19c04ac7b7ae</id>
+      <name>AgeUserMetafeature</name>
+      <revision>4</revision>
+      <lastModified>
+        <time>1502359089006</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <contextSet>
+        <delegate>
+          <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+          <contextType>DESTINATION_DISPATCHER</contextType>
+          <contextType>SOURCE_RECEIVER</contextType>
+          <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+          <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+        </delegate>
+      </contextSet>
+      <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+        <type>FUNCTION</type>
+        <code>/**
+	Generates the correct user metafeature for the age user
+
+	@param {Integer} birthDateTime - birth date time in seconds
+	@return {String} age user metafeature code
+*/
+
+function generateAgeUserMetafeature(birthDateTime){
+
+	var ageMetafeature;
+	
+	years = birthDateTime/(60*60*24*365);
+
+	if(years &lt;26){ // Young
+		ageMetafeature = &quot;100&quot;;
+	}else if(years &gt;=26 &amp;&amp; years &lt;71){ //Medium
+		ageMetafeature = &quot;010&quot;;
+	}else{ // Old
+		ageMetafeature = &quot;001&quot;;
+	}
+	return ageMetafeature;
+	
+}</code>
+      </properties>
+    </codeTemplate>
+    <codeTemplate version="3.5.1">
+      <id>88f32fec-1ed5-495b-9f8e-500c488e270a</id>
+      <name>CigarettesConsumptionMetafeature</name>
+      <revision>6</revision>
+      <lastModified>
+        <time>1502361439806</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <contextSet>
+        <delegate>
+          <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+          <contextType>DESTINATION_DISPATCHER</contextType>
+          <contextType>SOURCE_RECEIVER</contextType>
+          <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+          <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+        </delegate>
+      </contextSet>
+      <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+        <type>FUNCTION</type>
+        <code>/**
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+function generateCigarettesConsumptionUserMetafeature(dailyCigarettes) {
+
+	var cigarettesConsumptionMetafeature;
+
+	if(dailyCigarettes &lt; 11){ // Low
+		cigarettesConsumptionMetafeature = &quot;10&quot;;
+	}else{ // High
+		cigarettesConsumptionMetafeature = &quot;01&quot;;
+	}
+	
+	return cigarettesConsumptionMetafeature;
+}</code>
+      </properties>
+    </codeTemplate>
+    <codeTemplate version="3.5.1">
+      <id>2b9773ef-bb7c-43c8-9999-43e4791baa83</id>
+      <name>GetMonday</name>
+      <revision>2</revision>
+      <lastModified>
+        <time>1506601006930</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <contextSet>
+        <delegate>
+          <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+          <contextType>DESTINATION_DISPATCHER</contextType>
+          <contextType>SOURCE_RECEIVER</contextType>
+          <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+          <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+        </delegate>
+      </contextSet>
+      <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+        <type>FUNCTION</type>
+        <code>/**
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+
+function getMondayFormatDate(d) {
+	
+  d = new Date(d);
+  var day = d.getDay(),
+      diff = d.getDate() - day + (day == 0 ? -6:1); // adjust when day is sunday
+  
+  var mondayDate = new Date(d.setDate(diff))
+  // 2017-08-13 13:47:20.0457
+  return  mondayDate.getFullYear() + &quot;-&quot; + (mondayDate.getMonth() + 1) + &quot;-&quot; + mondayDate.getDate().toString() + &quot; 00:00:00.0000&quot;;
+}</code>
+      </properties>
+    </codeTemplate>
+    <codeTemplate version="3.5.1">
+      <id>cd479a08-3c4d-45a7-964d-13bc5b779b70</id>
+      <name>MatchMetafeaturesWithMessage</name>
+      <revision>26</revision>
+      <lastModified>
+        <time>1506601007008</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <contextSet>
+        <delegate>
+          <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+          <contextType>DESTINATION_DISPATCHER</contextType>
+          <contextType>SOURCE_RECEIVER</contextType>
+          <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+          <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+        </delegate>
+      </contextSet>
+      <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+        <type>FUNCTION</type>
+        <code>/*
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+function matchMetafeaturesWithMessage(message_metafeatures, user_metafeatures) {
+	var match = true;
+	if(message_metafeatures.length != user_metafeatures.length){
+		//logger.info(&quot;Arrays haven&apos;t same length. Result: false&quot;);
+		match = false;  
+	}else{
+		//logger.info(&quot;Arrays have same length. Continue...&quot;);
+		for(var i = 0; i &lt; message_metafeatures.length; i++){
+			if(message_metafeatures[i] == &quot;1&quot;){
+				// logger.info(&quot;Message metafeature always true. Continue to another iteration...&quot;);
+				continue;
+			}else{
+				// logger.info(&quot;Message metafeature isn&apos;t true always. Continue...&quot;);
+				if(user_metafeatures[i] == &quot;0&quot;){
+					// logger.info(&quot;User metafeature without response. Break and Result: false&quot;);
+					match = false;
+					break;
+				}else{
+					// logger.info(&quot;User metafeature with response. Continue...&quot;);
+					if(message_metafeatures[i].length != user_metafeatures[i].length){
+						// logger.info(&quot;Metafeature strings haven&apos;t the same length. Break and Result: false &quot;);
+						// logger.info(&quot;message_metafeatures[i]: &quot; + message_metafeatures[i]  + &quot;user_metafeatures[i] &quot;  + user_metafeatures[i]);
+						// logger.info(&quot;message_metafeatures[i].length: &quot; + message_metafeatures[i].length  + &quot;user_metafeatures[i].length  &quot;  + user_metafeatures[i].length);
+						match = false
+						break;
+					}else{
+						// logger.info(&quot;Metafeature strings have the same length. Continue comparing &quot; + user_metafeatures[i] +&quot; with &quot; + message_metafeatures[i]);
+						match = false;
+						for(j = 0; j &lt;message_metafeatures[i].length; j++){
+							if(message_metafeatures[i][j] == user_metafeatures[i][j] &amp;&amp; message_metafeatures[i][j] == &apos;1&apos;){
+								// logger.info(&quot;Match &quot; + user_metafeatures[i][j] +&quot; with &quot; + message_metafeatures[i][j]);
+								//logger.info(&quot;Metafeature strings match with value= &apos;1&apos; in a char value. Break and Continue... &quot;);
+								match = true;
+								break; 
+							}
+						}
+						if(!match){
+							// logger.info(&quot;Metafeature strings not match with value= &apos;1&apos; in any char values. Break and result: False &quot;);
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return match;
+}</code>
+      </properties>
+    </codeTemplate>
+    <codeTemplate version="3.5.1">
+      <id>06650567-d30b-4f53-86fa-078008e419d2</id>
+      <name>QuittingAttemptTimeMetafeature</name>
+      <revision>7</revision>
+      <lastModified>
+        <time>1502688377676</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <contextSet>
+        <delegate>
+          <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+          <contextType>DESTINATION_DISPATCHER</contextType>
+          <contextType>SOURCE_RECEIVER</contextType>
+          <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+          <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+        </delegate>
+      </contextSet>
+      <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+        <type>FUNCTION</type>
+        <code>/**
+	Generates the correct user metafeature for the user quitting time
+
+	@param {Integer} quittingTime - quitting time in seconds
+	@return {String} time quitting metafeature code
+*/
+
+function generateQuittingAttemptTimeUserMetafeature(quittingTime){
+
+	var daysQuittingMetafeature;
+
+	
+	if(quittingTime &lt;0){
+		daysQuittingMetafeature = &quot;1000&quot;;
+	}
+	else{
+		time = quittingTime/(60*60*24);
+		
+		if(time &lt; 14){ // Short time
+			daysQuittingMetafeature = &quot;0100&quot;;
+		}else if(time &gt;= 14 &amp;&amp; time &lt;60){ // Long time
+			daysQuittingMetafeature = &quot;0010&quot;;
+		}else{
+			daysQuittingMetafeature = &quot;0001&quot;;
+		}
+	}
+	
+	return daysQuittingMetafeature;
+	
+}</code>
+      </properties>
+    </codeTemplate>
+    <codeTemplate version="3.5.1">
+      <id>ce0bbb9a-6a1e-4063-988f-13e15de96060</id>
+      <name>RandomHourInInterval</name>
+      <revision>33</revision>
+      <lastModified>
+        <time>1506601006852</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <contextSet>
+        <delegate>
+          <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+          <contextType>DESTINATION_DISPATCHER</contextType>
+          <contextType>SOURCE_RECEIVER</contextType>
+          <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+          <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+        </delegate>
+      </contextSet>
+      <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+        <type>FUNCTION</type>
+        <code>/**
+	Creates random hour between a time interval.
+
+	@param {String} startTime - start time with format &apos;hh:mm:ss&apos;
+	@param {String} endTime - end time with format &apos;hh:mm:ss&apos;
+	@return {String} return random hour with format &apos;hh:mm:00&apos;
+*/
+function getRandomTimeInInterval(startTime, endTime) {
+	
+	startTime = &quot;&quot; + startTime.toString();
+	endTime = &quot;&quot; + endTime.toString();
+	
+	var startTimeArray = startTime.split(&quot;:&quot;);
+	var startTimeInFloat = parseInt(startTimeArray[0][0]==&quot;0&quot; ? startTimeArray[0][1] : startTimeArray[0],10) 
+								+ parseInt(startTimeArray[1][0]==&quot;0&quot; ? startTimeArray[1][1] : startTimeArray[1], 10)/60;
+
+	var endTimeArray = endTime.split(&quot;:&quot;);
+	var endTimeInFloat = parseInt(endTimeArray[0][0]==&quot;0&quot; ? endTimeArray[0][1] : endTimeArray[0], 10) 
+								+ parseInt(endTimeArray[1][0]==&quot;0&quot; ? endTimeArray[1][1] : endTimeArray[1], 10)/60;
+
+	var currentDate = new Date();
+	var currentHour = currentDate.getHours();
+	var currentMinute = currentDate.getMinutes();
+
+	var currentTimeFloat = currentHour + (currentMinute/60) ;
+
+/*	logger.info(&quot;start interval values&quot;)
+	logger.info(startTimeArray[0] + &quot; - &quot; + startTimeArray[1])
+	logger.info(parseInt(startTimeArray[0]) + &quot; - &quot; + parseInt(startTimeArray[1])/60)
+	logger.info(startTimeInFloat)
+	logger.info(&quot;end interval values&quot;)
+	logger.info(endTimeArray[0] + &quot; - &quot; + endTimeArray[1])
+	logger.info(parseInt(endTimeArray[0]) + &quot; - &quot; + parseInt(endTimeArray[1])/60)
+	logger.info(endTimeInFloat)
+*/
+	
+	var timeSelectedInFloat;
+	var existAValidTime = true;
+
+	var validStartTime;
+	if(startTimeInFloat &lt; endTimeInFloat){
+		//logger.info(&quot;start &lt; end&quot;)
+		if(currentTimeFloat &lt; endTimeInFloat){
+			validStartTime = Math.max(startTimeInFloat, currentTimeFloat);
+			timeSelectedInFloat = Math.random() * (endTimeInFloat - validStartTime) + validStartTime;
+		}else{
+			existAValidTime = false;
+		}
+	}else if (startTimeInFloat &gt; endTimeInFloat){
+		//logger.info(&quot;start &gt; end&quot;)
+		firstOrSercondRandomSelection = Math.random();
+
+		var existAValidTimeInFirstRange = currentTimeFloat &lt; startTimeInFloat;
+		// var existAValidTimeInSecondRange = true; // currentTimeFloat &lt; 23.999...
+
+		var timeSelectedInFirstRangeFloat;
+		var timeSelectedInSecondRangeFloat;
+
+		if(existAValidTimeInFirstRange &amp;&amp; firstOrSercondRandomSelection &lt; 0.5){
+			timeSelectedInFirstRangeFloat = Math.random() * (startTimeFloat - currentTimeFloat) + currentTimeFloat;
+			timeSelectedInFloat = timeSelectedInFirstRangeFloat;	
+		}else{
+			validStartTime = Math.max(endTimeInFloat, currentTimeFloat);
+			timeSelectedInFirstRangeFloat = Math.random() * (23.9999 - validStartTime) + validStartTime;
+			timeSelectedInFloat = timeSelectedInSecondRangeFloat;
+		}
+		
+	}else{
+		//logger.info(&quot;startTimeInFloat == endTimeInFloat&quot;)
+		if(currentTimeFloat &lt; endTimeInFloat){
+			return startTime;
+		}else{
+			existAValidTime = false;
+		}
+	}
+
+	if(!existAValidTime){
+		return &quot;&quot;;
+	}
+	
+	hour = Math.floor(timeSelectedInFloat);
+	minutes = Math.floor((timeSelectedInFloat - hour)*60);
+
+	//logger.info(&quot;hour:  &quot; + hour + &quot; and minute: &quot; + minutes );
+
+	
+	var hourString = hour.toString();
+	hourString = hourString.length == 1 ? &quot;0&quot; + hourString : hourString;
+
+	var minutesString = minutes.toString();
+	minutesString = minutesString.length == 1 ? &quot;0&quot; + minutesString : minutesString;
+	
+	var time = hourString + &quot;:&quot; + minutesString +&quot;:00&quot;;
+
+	//logger.info(&quot;Time selected:&quot; + time);
+
+	return time;
+}</code>
+      </properties>
+    </codeTemplate>
+    <codeTemplate version="3.5.1">
+      <id>b62cfd65-37af-44b6-b29a-8d4a04ad9cc9</id>
+      <name>RichmondTestResultMetafeature</name>
+      <revision>6</revision>
+      <lastModified>
+        <time>1502360363888</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <contextSet>
+        <delegate>
+          <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+          <contextType>DESTINATION_DISPATCHER</contextType>
+          <contextType>SOURCE_RECEIVER</contextType>
+          <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+          <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+        </delegate>
+      </contextSet>
+      <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+        <type>FUNCTION</type>
+        <code>/**
+	Generates the correct richmond test punctuation metafeature for the user quitting time.
+
+	@param {Integer} richmondTestResult - motivation test punctuation
+	@return {String} richmond test punctuation metafeature
+*/
+function generateRichmondTestResultUserMetafeature(richmondTestResult) {
+
+	var richmondTestMetafeature;
+
+	if(richmondTestResult &lt; 5){ //Low
+		richmondTestMetafeature = &quot;100&quot;;
+	}else if(richmondTestResult &gt;=5 &amp;&amp; richmondTestResult &lt; 8){ //Medium
+		richmondTestMetafeature = &quot;010&quot;;
+	}else{ // High
+		richmondTestMetafeature = &quot;001&quot;;
+	}
+	
+	return richmondTestMetafeature;
+}</code>
+      </properties>
+    </codeTemplate>
+    <codeTemplate version="3.5.1">
+      <id>9ccce698-3c77-4497-ac10-013f0e8732d9</id>
+      <name>SpentMoneyMetafeature</name>
+      <revision>16</revision>
+      <lastModified>
+        <time>1502386208547</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <contextSet>
+        <delegate>
+          <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+          <contextType>DESTINATION_DISPATCHER</contextType>
+          <contextType>SOURCE_RECEIVER</contextType>
+          <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+          <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+        </delegate>
+      </contextSet>
+      <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+        <type>FUNCTION</type>
+        <code>/**
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+function generateSpentMoneyUserMetafeature(weeklyTobacoExpenditure, currency){
+
+	const eurosToTaiwaneseDollarConversionCoefficient = 32.622;
+	
+	const taiwaneseDollarToEurosConversionCoefficient = 0.03065;
+	const eurosToEurosConversionCoefficient = 1.0;
+	const dollarToEurosConversionCoefficient = 0.932;
+	const yuanToEurosConversionCoefficient = 0.135;
+	const britishPoundToEurosConversionCoefficient = 1.156;
+
+	var spentMoneyInEuros;
+	
+	var spentMoneyMetafeature;
+	switch (&quot;&quot; + currency){
+		case &quot;TWD&quot;:
+			spentMoneyInEuros = weeklyTobacoExpenditure*taiwaneseDollarToEurosConversionCoefficient;
+			break;
+		case &quot;EUR&quot;:
+			spentMoneyInEuros = weeklyTobacoExpenditure*eurosToEurosConversionCoefficient;
+			break;
+		case &quot;USD&quot;:
+			spentMoneyInEuros = weeklyTobacoExpenditure*dollarToEurosConversionCoefficient;
+			break;
+		case &quot;CNY&quot;:
+			spentMoneyInEuros = weeklyTobacoExpenditure*yuanToEurosConversionCoefficient;
+			break;
+		case &quot;GBP&quot;:
+			spentMoneyInEuros = weeklyTobacoExpenditure*britishPoundToEurosConversionCoefficient;
+			break;
+	}
+	
+	var spentMoneyInTaiwaneseDollar = spentMoneyInEuros * eurosToTaiwaneseDollarConversionCoefficient;
+	
+	if(spentMoneyInTaiwaneseDollar &lt; 700.0){ //Low
+		spentMoneyMetafeature = &quot;100&quot;;
+	}else if(spentMoneyInTaiwaneseDollar &gt;=700.0 &amp;&amp; spentMoneyInTaiwaneseDollar &lt; 2000.0){ //Medium
+		spentMoneyMetafeature = &quot;010&quot;;
+	}else{ // High
+		spentMoneyMetafeature = &quot;001&quot;;
+	}
+	
+	return spentMoneyMetafeature;
+}</code>
+      </properties>
+    </codeTemplate>
+    <codeTemplate version="3.5.1">
+      <id>e80f3ad6-1762-4b40-902e-b2fae48d90a3</id>
+      <name>TimeMetafeature</name>
+      <revision>6</revision>
+      <lastModified>
+        <time>1506601007039</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <contextSet>
+        <delegate>
+          <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+          <contextType>DESTINATION_DISPATCHER</contextType>
+          <contextType>SOURCE_RECEIVER</contextType>
+          <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+          <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+        </delegate>
+      </contextSet>
+      <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+        <type>FUNCTION</type>
+        <code>/**
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+function generateTimeMetafeature(time) {
+
+	//logger.info(&quot;the time is: &quot; + time);
+
+	time = &quot;&quot; + time.toString();
+	
+	var timeArray = time.split(&quot;:&quot;);
+	var timeInFloat = parseInt(timeArray[0][0]==&quot;0&quot; ? timeArray[0][1] : timeArray[0], 10) 
+								+ parseInt(timeArray[1][0]==&quot;0&quot; ? timeArray[1][1] : timeArray[1], 10)/60;
+								
+	var timeMetafeature;
+
+	if(timeInFloat &gt; 8 &amp;&amp; timeInFloat &lt;11.5){
+		timeMetafeature = &quot;100&quot;;
+	}else if(timeInFloat &gt; 12 &amp;&amp; timeInFloat &lt;15){
+		timeMetafeature = &quot;010&quot;;
+	}else if (timeInFloat &gt; 19 &amp;&amp; timeInFloat &lt;22){
+		timeMetafeature = &quot;001&quot;;
+	}else{
+		timeMetafeature = &quot;0&quot;;
+	}
+
+	return timeMetafeature;
+}</code>
+      </properties>
+    </codeTemplate>
+    <codeTemplate version="3.5.1">
+      <id>42947a79-a623-42ac-9529-226f89da5cf9</id>
+      <name>TimeOffSetConversion</name>
+      <revision>13</revision>
+      <lastModified>
+        <time>1506601006961</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <contextSet>
+        <delegate>
+          <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+          <contextType>DESTINATION_DISPATCHER</contextType>
+          <contextType>SOURCE_RECEIVER</contextType>
+          <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+          <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+        </delegate>
+      </contextSet>
+      <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+        <type>FUNCTION</type>
+        <code>/**
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+function timeOffSetConversion(time, currentOffsetSeconds, destinationTimeZone) {
+	
+	var currentOffSetMinutes = Math.round(currentOffsetSeconds/60);
+		
+	var javaTimeZone = java.util.TimeZone.getTimeZone(destinationTimeZone);
+	var offSetOfUserTimeZone = javaTimeZone.getOffset(new Date().getTime()) / 1000 / 60;
+
+	/*
+	logger.info(&quot;El offeset en minutos de la base de datos es: &quot; + currentOffSetMinutes);
+		
+	logger.info(&quot;La zona horaria destino es: &quot; + destinationTimeZone + &quot; por lo que el GMT es: &quot; + offSetOfUserTimeZone  + 
+				&quot;. Por lo que la diferencia en minutos con el GMT de la base de datos es: &quot; + (currentOffSetMinutes  - offSetOfUserTimeZone));
+				*/
+	
+	var timeJSString = &quot;&quot; + time;
+	
+	var timeMinuteAndHourAndSecond = timeJSString.split(&quot;:&quot;);
+	
+	//logger.info(&quot;Despues del split es: &quot; + timeMinuteAndHourAndSecond.toString());
+
+	var hourInt = parseInt(timeMinuteAndHourAndSecond[0]*60, 10);
+	var minuteInt = parseInt(timeMinuteAndHourAndSecond[1],10);
+	var offsetCorrection = parseInt((currentOffSetMinutes - offSetOfUserTimeZone), 10);
+	
+	var timeWithCorrectOffsetInt = hourInt + minuteInt - offsetCorrection;
+	
+	//logger.info(&quot;Valor en integer: &quot; + timeWithCorrectOffsetInt);
+
+	var timeWithCorrectOffsetHour = ((parseInt(timeWithCorrectOffsetInt/60, 10) % 24) + 24) % 24;
+	
+	//logger.info(&quot;Valor de la hora: &quot; + timeWithCorrectOffsetHour);
+	
+	var timeWithCorrectOffsetMinute = Math.abs(timeWithCorrectOffsetInt) % 60;
+
+	var timeWithCorrectOffset = ((timeWithCorrectOffsetHour &lt;10) ? (&quot;0&quot; + timeWithCorrectOffsetHour) : (&quot;&quot; + timeWithCorrectOffsetHour)) 
+								+ &quot;:&quot; + ((timeWithCorrectOffsetMinute &lt;10) ? (&quot;0&quot; + timeWithCorrectOffsetMinute) : (&quot;&quot; + timeWithCorrectOffsetMinute))
+								+ &quot;:00&quot;;
+
+	//logger.info(&quot;Las fecha &quot; + timeJSString + &quot; pasa a ser: &quot; + timeWithCorrectOffset);
+
+	return timeWithCorrectOffset;
+}</code>
+      </properties>
+    </codeTemplate>
+    <codeTemplate version="3.5.1">
+      <id>f4bca305-b959-49ed-9586-16f6592830c4</id>
+      <name>TimeSinceDate</name>
+      <revision>13</revision>
+      <lastModified>
+        <time>1506601006898</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <contextSet>
+        <delegate>
+          <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+          <contextType>DESTINATION_DISPATCHER</contextType>
+          <contextType>SOURCE_RECEIVER</contextType>
+          <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+          <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+        </delegate>
+      </contextSet>
+      <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+        <type>FUNCTION</type>
+        <code>/**
+	Calculates the time in seconds between the current date and date argument
+
+	@param {String} date - A format yyyy-mm-dd date string
+	@return {Integer} time in seconds
+*/
+
+function timeSinceDate(date) {
+	var dateWithoutTimeZone = date + &quot;T00:00:00-00:00&quot;
+	var startDate = new Date(dateWithoutTimeZone)
+	var currentDate = new Date();
+	
+	var seconds =  (currentDate.getTime() - startDate.getTime())/1000;
+	return seconds;
+	
+}</code>
+      </properties>
+    </codeTemplate>
+    <codeTemplate version="3.5.1">
+      <id>1ed1b4ab-b600-40d2-9890-dccf3809497b</id>
+      <name>UsersMatchPercentage</name>
+      <revision>26</revision>
+      <lastModified>
+        <time>1502582645059</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <contextSet>
+        <delegate>
+          <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+          <contextType>DESTINATION_DISPATCHER</contextType>
+          <contextType>SOURCE_RECEIVER</contextType>
+          <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+          <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+        </delegate>
+      </contextSet>
+      <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+        <type>FUNCTION</type>
+        <code>/**
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+function generateUserMatchPercentage(user1Metafeatures, user2Metafeatures) {
+
+	var matchPercentage;
+	if(user1Metafeatures.length != user2Metafeatures.length){
+		matchPercentage = 0;
+	}else{  
+
+		var metafeaturesSumPunctuation = 0.0;
+		
+		var metafeaturesAllowedByBothUsers = 0;
+		
+		for(var i = 0 ; i &lt; user1Metafeatures.length ; i++){
+			var onesInMetafeatureUser1 = (user1Metafeatures[i].match(/1/g) || []).length;
+			// logger.info(&quot;Cantidad de &apos;1&apos;s en user 1: &quot; + onesInMetafeatureUser1) 
+			var onesInMetafeatureUser2 = (user2Metafeatures[i].match(/1/g) || []).length;
+			// logger.info(&quot;Cantidad de &apos;1&apos;s en user 2: &quot; + onesInMetafeatureUser2)
+			//logger.info(user1Metafeatures[i] + &quot; y &quot; + user2Metafeatures[i])
+			if(onesInMetafeatureUser1 != 0 &amp;&amp; onesInMetafeatureUser2 != 0 &amp;&amp; user1Metafeatures[i].length == user2Metafeatures[i].length){
+				if(user1Metafeatures[i] == user2Metafeatures[i]){ // All ones match, max punctuation
+					metafeaturesSumPunctuation = metafeaturesSumPunctuation + 1.0;
+					//logger.info(&quot;metafeature match&quot;)
+				}else if(!(onesInMetafeatureUser1 == 1 &amp;&amp; onesInMetafeatureUser2 == 1)){ // Inside of negative clause are and special but very frequent case: 
+																		// &apos;1&apos; char appears in each string only once but in different possition
+																		// The contemplation of this case can reduce computational cost
+					//logger.info(&quot;dont match and more than one 1&quot;)
+					for(j = 0; j &lt;user1Metafeatures[i].length; j++){
+						var penalizationForEachNotMatching = 1/user1Metafeatures[i].length;
+						if(user1Metafeatures[i][j] == user2Metafeatures[i][j] &amp;&amp; user1Metafeatures[i][j] != &apos;0&apos;){
+							//logger.info(&quot;Metafeature strings match with value= &apos;1&apos; in a char value. Break and Continue... &quot;);
+							metafeaturesSumPunctuation = metafeaturesSumPunctuation + 1.0;
+						}else if (user1Metafeatures[i][j] != user2Metafeatures[i][j]){
+							metafeaturesSumPunctuation = metafeaturesSumPunctuation - penalizationForEachNotMatching;
+						}
+					}
+					normalizedMetafeaturePuntuation = metafeaturesSumPunctuation / Math.max(onesInMetafeatureUser1, onesInMetafeatureUser2);
+					metafeaturesSumPunctuation = metafeaturesSumPunctuation + normalizedMetafeaturePuntuation;
+				}else{
+					//logger.info(&quot;dont match and only one 1 each&quot;)
+				}
+				metafeaturesAllowedByBothUsers = metafeaturesAllowedByBothUsers + 1;
+			}
+			
+		}
+		matchPercentage = metafeaturesSumPunctuation/metafeaturesAllowedByBothUsers;
+	}
+	return matchPercentage
+}</code>
+      </properties>
+    </codeTemplate>
+    <codeTemplate version="3.5.1">
+      <id>fd41f7f4-ce32-47e1-acb0-667f6796ec3a</id>
+      <name>WeekDayMetafeature</name>
+      <revision>7</revision>
+      <lastModified>
+        <time>1502577924334</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <contextSet>
+        <delegate>
+          <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+          <contextType>DESTINATION_DISPATCHER</contextType>
+          <contextType>SOURCE_RECEIVER</contextType>
+          <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+          <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+        </delegate>
+      </contextSet>
+      <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+        <type>FUNCTION</type>
+        <code>/**
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+function generateWeekDayMetafeature() {
+
+	const possibleWeekMetafeaturesCodes = [&quot;0000001&quot;,&quot;1000000&quot;, &quot;0100000&quot;, &quot;0010000&quot;, &quot;0001000&quot;, &quot;0000100&quot;, &quot;0000010&quot;]; // First element: sunday, sencond element: Monday, next weekdays in order
+	var currentDate = new Date();
+	var currentWeekDay = currentDate.getDay();
+
+	// logger.info(&quot;array de possibleWeekMetafeaturesCodes: &quot; + possibleWeekMetafeaturesCodes);
+	// logger.info(&quot;escogida la numero &quot; + currentWeekDay + &quot;, es decir: &quot; + possibleWeekMetafeaturesCodes[currentWeekDay]);
+	return possibleWeekMetafeaturesCodes[currentWeekDay];
+
+}</code>
+      </properties>
+    </codeTemplate>
+    <codeTemplate version="3.5.1">
+      <id>e4a444cc-776c-4365-acc1-493d07d935e9</id>
+      <name>YearsStartSmokingMetafeature</name>
+      <revision>9</revision>
+      <lastModified>
+        <time>1502387188790</time>
+        <timezone>Europe/Paris</timezone>
+      </lastModified>
+      <contextSet>
+        <delegate>
+          <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+          <contextType>DESTINATION_DISPATCHER</contextType>
+          <contextType>SOURCE_RECEIVER</contextType>
+          <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+          <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+        </delegate>
+      </contextSet>
+      <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+        <type>FUNCTION</type>
+        <code>/**
+	Generates the correct user metafeature for the user start smoking time
+
+	@param {Integer} startSmokingDateTime - start smoking date time in seconds
+	@return {String} time smoking metafeature code
+*/
+
+function generateYearsStartSmokingUserMetafeature(startSmokingDateTime){
+
+	var yearsSmokingMetafeature;
+	
+	years = startSmokingDateTime/(60*60*24*365);
+
+	if(years &lt; 5){ // Short time
+		yearsSmokingMetafeature = &quot;10&quot;;
+	}else{ // Long time
+		yearsSmokingMetafeature = &quot;01&quot;;
+	}
+	return yearsSmokingMetafeature;
+	
+}</code>
+      </properties>
+    </codeTemplate>
+  </codeTemplates>
+</codeTemplateLibrary>
